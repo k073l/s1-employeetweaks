@@ -45,6 +45,7 @@ public class EmployeeTweaks : MelonMod
     {
         Logger = LoggerInstance;
         Logger.Msg("EmployeeTweaks initialized");
+        MoveItemBehaviourPatches.ManualPatchDestinationValid(HarmonyInstance);
     }
 
     public override void OnSceneWasLoaded(int buildIndex, string sceneName)

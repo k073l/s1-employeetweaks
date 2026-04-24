@@ -370,6 +370,10 @@
             <Private>false</Private>
             <HintPath>$(S1Dir)\Schedule I_Data\Managed\Assembly-CSharp.dll</HintPath>
         </Reference>
+        <Reference Include="ScheduleOne.Core" Publicize="true">
+            <Private>false</Private>
+            <HintPath>$(S1Dir)\Schedule I_Data\Managed\ScheduleOne.Core.dll</HintPath>
+        </Reference>
         <Reference Include="Assembly-CSharp-firstpass">
             <HintPath>$(S1Dir)\Schedule I_Data\Managed\Assembly-CSharp-firstpass.dll</HintPath>
         </Reference>
