@@ -168,7 +168,16 @@ internal class GrowContainerBehaviourPatch
         yield return new WaitForSeconds(waitTime);
         if (!soilPourer.isDispensing)
             soilPourer.PourSoil();
-        var usedItem = slot?.ItemInstance.GetCopy(1);
+        ItemInstance usedItem = null;
+        try
+        {
+            usedItem = slot?.ItemInstance.GetCopy(1);
+        }
+        catch (Exception e)
+        {
+            // benign, likely many coroutines ran
+            yield break;
+        }
         addSoilToGrowContainerBehaviour.OnStopPerformAction();
         addSoilToGrowContainerBehaviour.OnActionSuccess(usedItem);
         if (slot is { Quantity: > 0 })

@@ -1,9 +1,8 @@
-﻿using EmployeeTweaks.Patches.EmployeeArea;
-using MelonLoader;
+﻿using MelonLoader;
 using UnityEngine;
 using Object = UnityEngine.Object;
 
-namespace EmployeeTweaks;
+namespace EmployeeTweaks.Patches.EmployeeArea;
 
 internal class DebugAreaDrawer
 {
