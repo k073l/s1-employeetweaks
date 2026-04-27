@@ -1,19 +1,10 @@
 using System.Collections;
-using System.Reflection;
-using HarmonyLib;
 using MelonLoader;
 using EmployeeTweaks.Helpers;
-using EmployeeTweaks.Patches;
-using EmployeeTweaks.Patches.EmployeeArea;
+using EmployeeTweaks.Patches.FilterItemApply;
 using EmployeeTweaks.Patches.Unpackaging;
 using S1API.Entities;
 using UnityEngine;
-using Object = UnityEngine.Object;
-#if MONO
-using FishNet;
-#else
-using Il2CppFishNet;
-#endif
 
 [assembly: MelonInfo(
     typeof(EmployeeTweaks.EmployeeTweaks),
@@ -45,16 +36,20 @@ public class EmployeeTweaks : MelonMod
 {
     private static MelonLogger.Instance Logger;
     private DebugAreaDrawer debugAreaDrawer;
+    private bool _lastShift;
+    private bool _lastCtrl;
 
     internal static MelonPreferences_Category EmployeeCapacityCategory =
         MelonPreferences.CreateCategory("EmployeeTweaksEmployeeCapacity", "Employee Capacities");
-    
+
     internal static MelonPreferences_Entry<bool> EnableCapacityAndDebug =
         EmployeeCapacityCategory.CreateEntry("EmployeeTweaksEnableCapacityAndDebug", true, "Enable Category",
             "Enables employee capacity tweaks and drawing employee idle points area");
+
     internal static MelonPreferences_Entry<bool> DrawDebugArea =
         EmployeeCapacityCategory.CreateEntry("EmployeeTweaksDrawDebugArea", false, "Draw Debug Area",
             "Draws a debug area where employee idle points are contained");
+
     internal static HashSet<MelonPreferences_Entry<int>> EmployeeCapacities = [];
 
     public override void OnInitializeMelon()
@@ -75,6 +70,27 @@ public class EmployeeTweaks : MelonMod
             Logger.Debug("Main scene loaded, waiting for player");
             MelonCoroutines.Start(Utils.WaitForPlayer(DoStuff()));
         }
+    }
+
+    public override void OnLateUpdate()
+    {
+        var text = FilterConfigPanelPatches.ApplyItemAsFilterButtonText;
+        if (text == null)
+            return;
+
+        var shift = Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift);
+        var ctrl = Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl);
+
+        if (shift == _lastShift && ctrl == _lastCtrl)
+            return;
+
+        _lastShift = shift;
+        _lastCtrl = ctrl;
+
+        FilterConfigPanelPatches.AllSlots = shift;
+        FilterConfigPanelPatches.DenyListMode = ctrl;
+
+        text.text = shift ? FilterConfigPanelPatches.Filter2 : FilterConfigPanelPatches.Filter1;
     }
 
     private IEnumerator DoStuff()
