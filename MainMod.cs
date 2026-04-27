@@ -4,8 +4,11 @@ using HarmonyLib;
 using MelonLoader;
 using EmployeeTweaks.Helpers;
 using EmployeeTweaks.Patches;
+using EmployeeTweaks.Patches.EmployeeArea;
 using EmployeeTweaks.Patches.Unpackaging;
+using S1API.Entities;
 using UnityEngine;
+using Object = UnityEngine.Object;
 #if MONO
 using FishNet;
 #else
@@ -33,20 +36,35 @@ namespace EmployeeTweaks;
 public static class BuildInfo
 {
     public const string Name = "EmployeeTweaks";
-    public const string Description = "does stuff i guess";
-    public const string Author = "me";
+    public const string Description = "Some employee stuff";
+    public const string Author = "k073l";
     public const string Version = "1.0.0";
 }
 
 public class EmployeeTweaks : MelonMod
 {
     private static MelonLogger.Instance Logger;
+    private DebugAreaDrawer debugAreaDrawer;
+
+    internal static MelonPreferences_Category EmployeeCapacityCategory =
+        MelonPreferences.CreateCategory("EmployeeTweaksEmployeeCapacity", "Employee Capacities");
+    
+    internal static MelonPreferences_Entry<bool> EnableCapacityAndDebug =
+        EmployeeCapacityCategory.CreateEntry("EmployeeTweaksEnableCapacityAndDebug", true, "Enable Category",
+            "Enables employee capacity tweaks and drawing employee idle points area");
+    internal static MelonPreferences_Entry<bool> DrawDebugArea =
+        EmployeeCapacityCategory.CreateEntry("EmployeeTweaksDrawDebugArea", false, "Draw Debug Area",
+            "Draws a debug area where employee idle points are contained");
+    internal static HashSet<MelonPreferences_Entry<int>> EmployeeCapacities = [];
 
     public override void OnInitializeMelon()
     {
         Logger = LoggerInstance;
         Logger.Msg("EmployeeTweaks initialized");
         MoveItemBehaviourPatches.ManualPatchDestinationValid(HarmonyInstance);
+        debugAreaDrawer = new DebugAreaDrawer();
+        Player.LocalPlayerSpawned += _ => debugAreaDrawer.Draw();
+        DrawDebugArea.OnEntryValueChanged.Subscribe((_, _) => debugAreaDrawer.Draw());
     }
 
     public override void OnSceneWasLoaded(int buildIndex, string sceneName)

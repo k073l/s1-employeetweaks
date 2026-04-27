@@ -1,9 +1,10 @@
 ﻿using System.Diagnostics;
 using MelonLoader;
+using MelonLoader.Preferences;
 
 namespace EmployeeTweaks.Helpers;
 
-public static class MelonLoggerExtensions
+public static class MelonExtensions
 {
     /// <summary>
     /// Logs a debug message to the console.
@@ -36,5 +37,15 @@ public static class MelonLoggerExtensions
         }
 
         return "unknown";
+    }
+    
+    public static MelonPreferences_Entry<T> GetOrCreateEntry<T>(this MelonPreferences_Category category,
+        string identifier, T defaultValue, string displayName = null, string description = null,
+        bool isHidden = false, bool dontSaveDefault = false, ValueValidator validator = null,
+        string oldIdentifier = null)
+    {
+        if (category.HasEntry(identifier)) return category.GetEntry<T>(identifier);
+        return category.CreateEntry(identifier, defaultValue, displayName, description, isHidden, dontSaveDefault,
+            validator, oldIdentifier);
     }
 }
