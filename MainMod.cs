@@ -4,6 +4,7 @@ using HarmonyLib;
 using MelonLoader;
 using EmployeeTweaks.Helpers;
 using EmployeeTweaks.Patches;
+using EmployeeTweaks.Patches.Unpackaging;
 using UnityEngine;
 #if MONO
 using FishNet;

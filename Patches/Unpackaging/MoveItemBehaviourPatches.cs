@@ -1,24 +1,40 @@
-using System.Collections;
-using EmployeeTweaks.Helpers;
-using EmployeeTweaks.Persistence;
+#if MONO
 using FishNet;
 using FishNet.Object;
-using HarmonyLib;
-using MelonLoader;
 using ScheduleOne.Employees;
 using ScheduleOne.GameTime;
 using ScheduleOne.ItemFramework;
 using ScheduleOne.Management;
 using ScheduleOne.NPCs.Behaviour;
 using ScheduleOne.ObjectScripts;
-using UnityEngine;
 using Console = ScheduleOne.Console;
+#else
+using Il2CppFishNet;
+using Console = Il2CppScheduleOne.Console;
+using Il2CppInterop.Runtime;
+using Il2CppScheduleOne.Employees;
+using Il2CppScheduleOne.GameTime;
+using Il2CppScheduleOne.ItemFramework;
+using Il2CppScheduleOne.Management;
+using Il2CppScheduleOne.NPCs;
+using Il2CppScheduleOne.NPCs.Behaviour;
+using Il2CppScheduleOne.ObjectScripts;
+#endif
+using System.Collections;
+using EmployeeTweaks.Helpers;
+using EmployeeTweaks.Persistence;
+using HarmonyLib;
+using MelonLoader;
+using UnityEngine;
 
-namespace EmployeeTweaks.Patches;
+namespace EmployeeTweaks.Patches.Unpackaging;
 
 [HarmonyPatch(typeof(MoveItemBehaviour))]
 internal static class MoveItemBehaviourPatches
 {
+    private static Dictionary<MoveItemBehaviour, object> customGrabRunning = new();
+    private static Dictionary<MoveItemBehaviour, object> customPlaceRunning = new();
+
     internal static void ManualPatchDestinationValid(HarmonyLib.Harmony harmony)
     {
         var method = AccessTools.Method(
@@ -73,9 +89,9 @@ internal static class MoveItemBehaviourPatches
         }
 
         var dest = route.Destination;
-        var destIsStation = Utils.Is<PackagingStation>(dest, out var destStation) && destStation != null;
+        var destIsStation = Utils.Is2<PackagingStation>(dest, out var destStation) && destStation != null;
         var src = route.Source;
-        var srcIsStation = Utils.Is<PackagingStation>(src, out var srcStation) && srcStation != null;
+        var srcIsStation = Utils.Is2<PackagingStation>(src, out var srcStation) && srcStation != null;
         if (!destIsStation && !srcIsStation)
         {
             __result = false;
@@ -84,7 +100,7 @@ internal static class MoveItemBehaviourPatches
 
         var station = destIsStation ? destStation : srcStation;
 
-        UnpackageSave.Instance.UnpackageStations.TryGetValue(station.GUID, out var shouldUnpackage);
+        UnpackageSave.Instance.TryGetValue(station.GUID, out var shouldUnpackage);
         if (!shouldUnpackage)
         {
             __result = false;
@@ -105,7 +121,8 @@ internal static class MoveItemBehaviourPatches
             return false;
         }
 
-        if (dest.GetOutputCapacityForItem(item, __instance.Npc) == 0)
+        var capacity = destIsStation ? dest.GetOutputCapacityForItem(item, __instance.Npc) : dest.GetInputCapacityForItem(item, __instance.Npc);
+        if (capacity == 0)
         {
             invalidReason = "Destination has no capacity for item!";
             __result = false;
@@ -128,14 +145,14 @@ internal static class MoveItemBehaviourPatches
         }
 
         var dest = route.Destination;
-        var destIsStation = Utils.Is<PackagingStation>(dest, out var destStation) && destStation != null;
+        var destIsStation = Utils.Is2<PackagingStation>(dest, out var destStation) && destStation != null;
         var src = route.Source;
-        var srcIsStation = Utils.Is<PackagingStation>(src, out var srcStation) && srcStation != null;
+        var srcIsStation = Utils.Is2<PackagingStation>(src, out var srcStation) && srcStation != null;
 
         if (!destIsStation && !srcIsStation) return true;
         var station = destIsStation ? destStation : srcStation;
 
-        UnpackageSave.Instance.UnpackageStations.TryGetValue(station.GUID, out var shouldUnpackage);
+        UnpackageSave.Instance.TryGetValue(station.GUID, out var shouldUnpackage);
         if (!shouldUnpackage)
         {
             __result = false;
@@ -178,13 +195,13 @@ internal static class MoveItemBehaviourPatches
         if (__instance.assignedRoute?.Destination == null) return true;
 
         var dest = __instance.assignedRoute.Destination;
-        var destIsStation = Utils.Is<PackagingStation>(dest, out var destStation) && destStation != null;
+        var destIsStation = Utils.Is2<PackagingStation>(dest, out var destStation) && destStation != null;
         var src = __instance.assignedRoute.Source;
-        var srcIsStation = Utils.Is<PackagingStation>(src, out var srcStation) && srcStation != null;
+        var srcIsStation = Utils.Is2<PackagingStation>(src, out var srcStation) && srcStation != null;
 
         if (!destIsStation && !srcIsStation) return true;
         var station = destIsStation ? destStation : srcStation;
-        UnpackageSave.Instance.UnpackageStations.TryGetValue(station.GUID, out var shouldUnpackage);
+        UnpackageSave.Instance.TryGetValue(station.GUID, out var shouldUnpackage);
         if (!shouldUnpackage) return true;
 
         if (destIsStation)
@@ -215,13 +232,13 @@ internal static class MoveItemBehaviourPatches
         if (__instance.assignedRoute?.Destination == null) return true;
 
         var dest = __instance.assignedRoute.Destination;
-        var destIsStation = Utils.Is<PackagingStation>(dest, out var destStation) && destStation != null;
+        var destIsStation = Utils.Is2<PackagingStation>(dest, out var destStation) && destStation != null;
         var src = __instance.assignedRoute.Source;
-        var srcIsStation = Utils.Is<PackagingStation>(src, out var srcStation) && srcStation != null;
+        var srcIsStation = Utils.Is2<PackagingStation>(src, out var srcStation) && srcStation != null;
 
         if (!destIsStation && !srcIsStation) return true;
         var station = destIsStation ? destStation : srcStation;
-        UnpackageSave.Instance.UnpackageStations.TryGetValue(station.GUID, out var shouldUnpackage);
+        UnpackageSave.Instance.TryGetValue(station.GUID, out var shouldUnpackage);
         if (!shouldUnpackage) return true;
 
         var itemInstance = __instance.assignedRoute.Source
@@ -237,11 +254,9 @@ internal static class MoveItemBehaviourPatches
         var quantity = itemInstance.Quantity;
         if (__instance.maxMoveAmount > 0)
             quantity = Mathf.Min(__instance.maxMoveAmount, quantity);
-        int capacityForItem;
-        if (destIsStation)
-            capacityForItem = dest.GetOutputCapacityForItem(itemInstance, __instance.Npc);
-        else
-            capacityForItem = dest.GetInputCapacityForItem(itemInstance, __instance.Npc);
+        var capacityForItem = destIsStation
+            ? dest.GetOutputCapacityForItem(itemInstance, __instance.Npc)
+            : dest.GetInputCapacityForItem(itemInstance, __instance.Npc);
         __result = Mathf.Min(quantity, capacityForItem);
         return false;
     }
@@ -253,12 +268,12 @@ internal static class MoveItemBehaviourPatches
         if (__instance.assignedRoute?.Source == null) return true;
 
         var dest = __instance.assignedRoute.Destination;
-        var destIsStation = Utils.Is<PackagingStation>(dest, out var destStation) && destStation != null;
+        var destIsStation = Utils.Is2<PackagingStation>(dest, out var destStation) && destStation != null;
         var src = __instance.assignedRoute.Source;
-        var srcIsStation = Utils.Is<PackagingStation>(src, out var srcStation) && srcStation != null;
+        var srcIsStation = Utils.Is2<PackagingStation>(src, out var srcStation) && srcStation != null;
         if (!destIsStation && !srcIsStation) return true;
         var station = destIsStation ? destStation : srcStation;
-        UnpackageSave.Instance.UnpackageStations.TryGetValue(station.GUID, out var shouldUnpackage);
+        UnpackageSave.Instance.TryGetValue(station.GUID, out var shouldUnpackage);
         if (!shouldUnpackage) return true;
         if (destIsStation) return true;
         // srcIsStation
@@ -266,7 +281,9 @@ internal static class MoveItemBehaviourPatches
         if (__instance.beh.DEBUG_MODE)
             Console.Log("MoveItemBehaviour.GrabItem");
         __instance.currentState = MoveItemBehaviour.EState.Grabbing;
-        __instance.grabRoutine = __instance.StartCoroutine(Routine());
+        __instance.grabRoutine = null;
+        var obj = MelonCoroutines.Start(Routine());
+        customGrabRunning[__instance] = obj;
         return false;
 
         IEnumerator Routine()
@@ -277,6 +294,9 @@ internal static class MoveItemBehaviourPatches
                 Console.LogWarning("Could not find source access point!");
                 __instance.grabRoutine = null;
                 __instance.Disable_Networked(null);
+                var coro = customGrabRunning[__instance];
+                customGrabRunning.Remove(__instance);
+                MelonCoroutines.Stop(coro);
             }
             else
             {
@@ -293,6 +313,9 @@ internal static class MoveItemBehaviourPatches
                         $"{__instance.Npc.fullName} transit route no longer valid! Reason: {invalidReason}");
                     __instance.grabRoutine = null;
                     __instance.Disable_Networked(null);
+                    var coro = customGrabRunning[__instance];
+                    customGrabRunning.Remove(__instance);
+                    MelonCoroutines.Stop(coro);
                 }
                 else
                 {
@@ -300,6 +323,9 @@ internal static class MoveItemBehaviourPatches
                     yield return new WaitForSeconds(TimeManager.TickDuration);
                     __instance.grabRoutine = null;
                     __instance.currentState = MoveItemBehaviour.EState.Idle;
+                    var coro = customGrabRunning[__instance];
+                    customGrabRunning.Remove(__instance);
+                    MelonCoroutines.Stop(coro);
                 }
             }
         }
@@ -312,13 +338,13 @@ internal static class MoveItemBehaviourPatches
         if (__instance.assignedRoute?.Destination == null) return true;
 
         var dest = __instance.assignedRoute.Destination;
-        var destIsStation = Utils.Is<PackagingStation>(dest, out var destStation) && destStation != null;
+        var destIsStation = Utils.Is2<PackagingStation>(dest, out var destStation) && destStation != null;
         var src = __instance.assignedRoute.Source;
-        var srcIsStation = Utils.Is<PackagingStation>(src, out var srcStation) && srcStation != null;
+        var srcIsStation = Utils.Is2<PackagingStation>(src, out var srcStation) && srcStation != null;
 
         if (!destIsStation && !srcIsStation) return true;
         var station = destIsStation ? destStation : srcStation;
-        UnpackageSave.Instance.UnpackageStations.TryGetValue(station.GUID, out var shouldUnpackage);
+        UnpackageSave.Instance.TryGetValue(station.GUID, out var shouldUnpackage);
         if (!shouldUnpackage) return true;
 
         if (__instance.beh.DEBUG_MODE)
@@ -353,19 +379,21 @@ internal static class MoveItemBehaviourPatches
         if (__instance.assignedRoute?.Destination == null) return true;
 
         var dest = __instance.assignedRoute.Destination;
-        var destIsStation = Utils.Is<PackagingStation>(dest, out var destStation) && destStation != null;
+        var destIsStation = Utils.Is2<PackagingStation>(dest, out var destStation) && destStation != null;
         var src = __instance.assignedRoute.Source;
-        var srcIsStation = Utils.Is<PackagingStation>(src, out var srcStation) && srcStation != null;
+        var srcIsStation = Utils.Is2<PackagingStation>(src, out var srcStation) && srcStation != null;
 
         if (!destIsStation && !srcIsStation) return true;
         var station = destIsStation ? destStation : srcStation;
-        UnpackageSave.Instance.UnpackageStations.TryGetValue(station.GUID, out var shouldUnpackage);
+        UnpackageSave.Instance.TryGetValue(station.GUID, out var shouldUnpackage);
         if (!shouldUnpackage) return true;
 
         if (__instance.beh.DEBUG_MODE)
             Console.Log("MoveItemBehaviour.PlaceItem");
         __instance.currentState = MoveItemBehaviour.EState.Placing;
-        __instance.placingRoutine = __instance.StartCoroutine(Routine());
+        __instance.placingRoutine = null;
+        var obj = MelonCoroutines.Start(Routine());
+        customPlaceRunning[__instance] = obj;
         return false;
 
         IEnumerator Routine()
@@ -376,6 +404,7 @@ internal static class MoveItemBehaviourPatches
             __instance.Npc.SetAnimationTrigger_Networked(null, "GrabItem");
             if (!Utils.Is<Employee>(__instance.Npc, out var employee) || employee == null)
             {
+                customPlaceRunning.Remove(__instance);
                 yield break;
             }
 
@@ -434,21 +463,94 @@ internal static class MoveItemBehaviourPatches
             __instance.placingRoutine = null;
             __instance.currentState = MoveItemBehaviour.EState.Idle;
             __instance.Disable_Networked(null);
+            var coro = customPlaceRunning[__instance];
+            customPlaceRunning.Remove(__instance);
+            MelonCoroutines.Stop(coro);
         }
     }
 
-    [HarmonyPatch("StartTransit")]
+    [HarmonyPatch(nameof(MoveItemBehaviour.StopCurrentActivity))]
+    [HarmonyPrefix]
+    private static bool StopCurrentActivity(MoveItemBehaviour __instance)
+    {
+        switch (__instance.currentState)
+        {
+            case MoveItemBehaviour.EState.Grabbing:
+                if (customGrabRunning.TryGetValue(__instance, out var grabObj))
+                {
+                    MelonCoroutines.Stop(grabObj);
+                    customGrabRunning.Remove(__instance);
+                    return false;
+                }
+
+                return true;
+                break;
+            case MoveItemBehaviour.EState.Placing:
+                if (customPlaceRunning.TryGetValue(__instance, out var placeObj))
+                {
+                    MelonCoroutines.Stop(placeObj);
+                    customPlaceRunning.Remove(__instance);
+                    return false;
+                }
+
+                return true;
+                break;
+        }
+
+        return true;
+    }
+
+    [HarmonyPatch(nameof(MoveItemBehaviour.OnActiveTick))]
+    [HarmonyPrefix]
+    private static bool OnActiveTick(MoveItemBehaviour __instance)
+    {
+        if (!InstanceFinder.IsServer) return false;
+        if (!__instance.assignedRoute.AreEntitiesNonNull())
+        {
+            Console.LogWarning("Transit route entities are null!");
+            __instance.Disable_Networked(null);
+            return false;
+        }
+
+        if (__instance.beh.DEBUG_MODE)
+        {
+            Console.Log("State: " + __instance.currentState);
+            Console.Log("Moving: " + __instance.Npc.Movement.IsMoving);
+        }
+
+        if (__instance.currentState != 0) return false;
+        if (__instance.Npc.Inventory.GetIdenticalItemAmount(__instance.itemToRetrieveTemplate) > 0 &&
+            __instance.grabbedAmount > 0)
+        {
+            if (__instance.IsAtDestination())
+                __instance.PlaceItem();
+            else
+                __instance.WalkToDestination();
+        }
+        else if (__instance.skipPickup)
+        {
+            __instance.TakeItem();
+            __instance.skipPickup = false;
+        }
+        else if (__instance.IsAtSource())
+            __instance.GrabItem();
+        else
+            __instance.WalkToSource();
+
+        return false;
+    }
+
+    [HarmonyPatch(nameof(MoveItemBehaviour.StartTransit))]
     [HarmonyPrefix]
     private static bool StartTransit(MoveItemBehaviour __instance)
     {
         var dest = __instance.assignedRoute.Destination;
-        var destIsStation = Utils.Is<PackagingStation>(dest, out var destStation) && destStation != null;
+        var destIsStation = Utils.Is2<PackagingStation>(dest, out var destStation) && destStation != null;
         var src = __instance.assignedRoute.Source;
-        var srcIsStation = Utils.Is<PackagingStation>(src, out var srcStation) && srcStation != null;
+        var srcIsStation = Utils.Is2<PackagingStation>(src, out var srcStation) && srcStation != null;
 
         if (!destIsStation && !srcIsStation) return true;
 
-        Console.Log("StartTransit called");
         Console.Log(
             $"{__instance.assignedRoute.Source.Name} ->  {__instance.assignedRoute.Destination.Name} ({__instance.itemToRetrieveTemplate?.ID}x{__instance.itemToRetrieveTemplate?.Quantity})");
         if (!InstanceFinder.IsServer)
@@ -471,9 +573,18 @@ internal static class MoveItemBehaviourPatches
         }
         else
         {
-            ItemInstance firstIdenticalItem =
+#if MONO
+            var firstIdenticalItem =
                 __instance.Npc.Inventory.GetFirstIdenticalItem(__instance.itemToRetrieveTemplate,
                     __instance.IsNpcInventoryItemValid);
+#else
+            var converted =
+                DelegateSupport.ConvertDelegate<NPCInventory.ItemFilter>(
+                    __instance.IsNpcInventoryItemValid
+                );
+            var firstIdenticalItem =
+                __instance.Npc.Inventory.GetFirstIdenticalItem(__instance.itemToRetrieveTemplate, converted);
+#endif
             if (__instance.Npc.Behaviour.DEBUG_MODE)
             {
                 Console.Log("Moving item: " + firstIdenticalItem);
@@ -490,210 +601,5 @@ internal static class MoveItemBehaviourPatches
 
         __instance.currentState = MoveItemBehaviour.EState.Idle;
         return false;
-    }
-}
-
-public static class TransitEntityExtensions
-{
-    public static List<ItemSlot> ReserveOutputSlotsForItem(this ITransitEntity entity, ItemInstance item,
-        NetworkObject locker)
-    {
-        List<ItemSlot> list = [];
-        var num = item.Quantity;
-        for (var i = 0; i < entity.OutputSlots.Count; i++)
-        {
-            var capacityForItem = entity.OutputSlots[i].GetCapacityForItem(item);
-            if (capacityForItem != 0)
-            {
-                var num2 = Mathf.Min(capacityForItem, num);
-                num -= num2;
-                entity.OutputSlots[i].ApplyLock(locker, "Employee is about to place an item here");
-                list.Add(entity.OutputSlots[i]);
-                if (num <= 0)
-                {
-                    break;
-                }
-            }
-        }
-
-        return list;
-    }
-
-    public static void RemoveOutputSlotLocks(this ITransitEntity entity, NetworkObject locker)
-    {
-        for (var i = 0; i < entity.OutputSlots.Count; i++)
-        {
-            if (entity.OutputSlots[i].ActiveLock != null && entity.OutputSlots[i].ActiveLock.LockOwner == locker)
-            {
-                entity.OutputSlots[i].RemoveLock();
-            }
-        }
-    }
-}
-
-[HarmonyPatch(typeof(AdvancedTransitRoute))]
-internal static class AdvancedTransitRoutePatch
-{
-    [HarmonyPatch(nameof(AdvancedTransitRoute.GetItemReadyToMove))]
-    [HarmonyPrefix]
-    private static bool GetItemReadyToMove(AdvancedTransitRoute __instance, ref ItemInstance __result)
-    {
-        if (__instance.Source == null || __instance.Destination == null) return true;
-        if (__instance.Destination == null) return true;
-
-        var dest = __instance.Destination;
-        var destIsStation = Utils.Is<PackagingStation>(dest, out var destStation) && destStation != null;
-        var src = __instance.Source;
-        var srcIsStation = Utils.Is<PackagingStation>(src, out var srcStation) && srcStation != null;
-
-        if (!destIsStation && !srcIsStation) return true;
-        var station = destIsStation ? destStation : srcStation;
-        UnpackageSave.Instance.UnpackageStations.TryGetValue(station.GUID, out var shouldUnpackage);
-        if (!shouldUnpackage) return true;
-
-        if (destIsStation)
-        {
-            foreach (var outputSlot in __instance.Source.OutputSlots)
-            {
-                if (outputSlot.ItemInstance != null && __instance.Filter.DoesItemMeetFilter(outputSlot.ItemInstance))
-                {
-                    var outputCapacityForItem = dest.GetOutputCapacityForItem(outputSlot.ItemInstance);
-                    if (outputCapacityForItem > 0)
-                    {
-                        __result = outputSlot.ItemInstance.GetCopy(Mathf.Min(outputCapacityForItem,
-                            outputSlot.ItemInstance.Quantity));
-                        return false;
-                    }
-                }
-            }
-        }
-        else
-        {
-            foreach (var inputSlot in __instance.Source.InputSlots)
-            {
-                if (inputSlot.ItemInstance != null && __instance.Filter.DoesItemMeetFilter(inputSlot.ItemInstance))
-                {
-                    var inputCapacityForItem = dest.GetInputCapacityForItem(inputSlot.ItemInstance);
-                    if (inputCapacityForItem > 0)
-                    {
-                        __result = inputSlot.ItemInstance.GetCopy(Mathf.Min(inputCapacityForItem,
-                            inputSlot.ItemInstance.Quantity));
-                        return false;
-                    }
-                }
-            }
-        }
-
-        __result = null;
-        return false;
-    }
-}
-
-[HarmonyPatch(typeof(Packager))]
-internal static class PackagerPatches
-{
-    [HarmonyWrapSafe]
-    [HarmonyPatch(nameof(Packager.GetStationMoveItems))]
-    [HarmonyPrefix]
-    private static bool GetStationMoveItems(Packager __instance, ref PackagingStation __result)
-    {
-        foreach (var assignedStation in __instance.configuration.AssignedStations)
-        {
-            if (assignedStation != null && Utils.Is<PackagingStation>(assignedStation, out var station) &&
-                station != null &&
-                UnpackageSave.Instance.UnpackageStations.TryGetValue(station.GUID, out var shouldUnpackage) &&
-                shouldUnpackage)
-            {
-                var inputSlots = station.InputSlots;
-                if (!Utils.Is<PackagingStationConfiguration>(assignedStation.Configuration, out var config) ||
-                    config == null)
-                    continue;
-                var isAnyRouteValid = inputSlots.Where(x => x != null)
-                    .Select(x => x.ItemInstance)
-                    .Where(x => x?.ID != null)
-                    .Any(x => __instance.MoveItemBehaviour.IsTransitRouteValid(config.DestinationRoute, x.ID));
-                if (inputSlots.Sum(x => x.Quantity) != 0 && isAnyRouteValid)
-                {
-                    __result = assignedStation;
-                    return false;
-                }
-            }
-            else
-            {
-                var outputSlot = assignedStation.OutputSlot;
-                if (!Utils.Is<PackagingStationConfiguration>(assignedStation.Configuration, out var config) ||
-                    config == null)
-                    continue;
-                if (outputSlot.Quantity != 0 &&
-                    __instance.MoveItemBehaviour.IsTransitRouteValid(config.DestinationRoute,
-                        outputSlot.ItemInstance.ID))
-                {
-                    __result = assignedStation;
-                    return false;
-                }
-            }
-        }
-
-        __result = null;
-        return false;
-    }
-
-    [HarmonyPatch(nameof(Packager.StartMoveItem), typeof(PackagingStation))]
-    [HarmonyPrefix]
-    private static bool StartMoveItem(Packager __instance, PackagingStation station)
-    {
-        UnpackageSave.Instance.UnpackageStations.TryGetValue(station.GUID, out var shouldUnpackage);
-        if (!shouldUnpackage) return true;
-        if (!Utils.Is<PackagingStationConfiguration>(station.Configuration, out var config) ||
-            config == null) return true;
-        var slotWithItem = station.InputSlots.FirstOrDefault(x =>
-        {
-            if (x.ItemInstance == null) return false;
-
-            string reason;
-            var valid = __instance.MoveItemBehaviour.IsTransitRouteValid(
-                config.DestinationRoute,
-                x.ItemInstance.ID,
-                out reason);
-
-            if (!valid)
-            {
-                Console.Log($"[Unpacked] Rejected item {x.ItemInstance.ID}: {reason}");
-            }
-
-            return valid;
-        });
-        if (slotWithItem == null) return true;
-        Console.Log("[Unpacked] Starting moving items from " + station.gameObject.name);
-        __instance.MoveItemBehaviour.InitializeMoveItemBehaviourWithID(config.DestinationRoute,
-            slotWithItem.ItemInstance);
-        __instance.MoveItemBehaviour.Enable_Networked();
-        return false;
-    }
-
-    private static void InitializeMoveItemBehaviourWithID(
-        this MoveItemBehaviour moveItemBehaviour,
-        TransitRoute route,
-        ItemInstance _itemToRetrieveTemplate,
-        int _maxMoveAmount = -1,
-        bool _skipPickup = false)
-    {
-        string invalidReason;
-        if (_itemToRetrieveTemplate?.ID == null) return;
-        if (!moveItemBehaviour.IsTransitRouteValid(route, _itemToRetrieveTemplate.ID, out invalidReason))
-        {
-            Console.LogError("Invalid transit route for move item behaviour! Reason: " + invalidReason,
-                moveItemBehaviour.gameObject);
-        }
-        else
-        {
-            moveItemBehaviour.assignedRoute = route;
-            moveItemBehaviour.itemToRetrieveTemplate = _itemToRetrieveTemplate;
-            moveItemBehaviour.maxMoveAmount = _maxMoveAmount;
-            if (moveItemBehaviour.Npc.Behaviour.DEBUG_MODE)
-                Console.Log(
-                    $"MoveItemBehaviour initialized with route: {route.Source.Name} -> {route.Destination.Name} for item: {_itemToRetrieveTemplate.ID}");
-            moveItemBehaviour.skipPickup = _skipPickup;
-        }
     }
 }

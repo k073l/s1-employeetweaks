@@ -1,13 +1,24 @@
-using EmployeeTweaks.Persistence;
-using HarmonyLib;
+#if MONO
 using ScheduleOne;
 using ScheduleOne.Management;
 using ScheduleOne.ObjectScripts;
 using ScheduleOne.UI.Management;
 using TMPro;
+#else
+using Il2CppScheduleOne;
+using Il2CppScheduleOne.Management;
+using Il2CppScheduleOne.ObjectScripts;
+using Il2CppScheduleOne.UI.Management;
+using Il2CppTMPro;
+#endif
+using EmployeeTweaks.Helpers;
+using EmployeeTweaks.Persistence;
+using HarmonyLib;
+using MelonLoader;
+using S1API.Internal.Abstraction;
 using UnityEngine;
 
-namespace EmployeeTweaks.Patches;
+namespace EmployeeTweaks.Patches.Unpackaging;
 
 public static class PackagingStationConfigPatches
 {
@@ -15,7 +26,7 @@ public static class PackagingStationConfigPatches
 
     public static void InitializeField(PackagingStationConfiguration config, PackagingStation station)
     {
-        var guid = station.GUID;
+        var guid = Guid.Parse(station.GUID.ToString());
 
         if (!UnpackageFields.ContainsKey(guid))
         {
@@ -48,23 +59,38 @@ public class PackagingStationConfigurationPatch
 public class PackagingStationConfigPanelPatch
 {
     [HarmonyPostfix]
-    [HarmonyPatch("BindInternal")]
-    public static void BindInternalPostfix(PackagingStationConfigPanel __instance, List<EntityConfiguration> configs)
+    [HarmonyPatch(nameof(PackagingStationConfigPanel.BindInternal))]
+    public static void BindInternalPostfix(PackagingStationConfigPanel __instance, 
+#if MONO
+        List<EntityConfiguration> configs)
+#else
+        Il2CppSystem.Collections.Generic.List<EntityConfiguration> configs)
+#endif
     {
         if (__instance == null || __instance.DestinationUI == null)
             return;
 
         try
         {
-            var config = configs.OfType<PackagingStationConfiguration>().FirstOrDefault();
+            PackagingStationConfiguration config = null;
+            foreach (var conf in configs)
+            {
+                if (!Utils.Is<PackagingStationConfiguration>(conf, out var result) || result == null) continue;
+                config = result;
+                break;
+            }
 
             if (config?.Station == null)
                 return;
 
-            var stationGuid = config.Station.GUID;
+            var stationGuid = Guid.Parse(config.Station.GUID.ToString());
 
             if (!PackagingStationConfigPatches.UnpackageFields.TryGetValue(stationGuid, out _))
-                return;
+            {
+                // if not, request
+                PackagingStationConfigPatches.InitializeField(config, config.Station);
+                // return;
+            }
 
             var parent = __instance.DestinationUI.transform.parent;
 
@@ -106,16 +132,18 @@ public class PackagingStationConfigPanelPatch
             var valueTmpro = valueText.AddComponent<TextMeshProUGUI>();
             valueTmpro.fontSize = 24f;
             valueTmpro.alignment = TextAlignmentOptions.Right;
-            UnpackageSave.Instance.UnpackageStations.TryGetValue(stationGuid, out var isUnpackage);
+            UnpackageSave.Instance.TryGetValue(stationGuid, out var isUnpackage);
             valueTmpro.text = isUnpackage ? "On" : "Off";
             valueTmpro.color = isUnpackage ? Color.green : Color.gray;
 
             var button = valueText.AddComponent<UnityEngine.UI.Button>();
 
             button.onClick.RemoveAllListeners();
-            button.onClick.AddListener(() =>
+            var s = "";
+            EventHelper.AddListener(() =>
             {
-                MelonLoader.MelonLogger.Msg("Button clicked");
+                s = s;
+                MelonLogger.Msg("Button clicked");
                 var save = UnpackageSave.Instance;
                 if (save?.UnpackageStations == null) return;
                 if (!save.UnpackageStations.TryAdd(stationGuid, true))
@@ -123,7 +151,7 @@ public class PackagingStationConfigPanelPatch
                 var newValue = save.UnpackageStations[stationGuid];
                 valueTmpro.text = newValue ? "On" : "Off";
                 valueTmpro.color = newValue ? Color.green : Color.gray;
-            });
+            }, button.onClick);
 
             var contentPanel = __instance.GetComponent<UIContentPanel>();
 
