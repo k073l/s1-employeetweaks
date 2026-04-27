@@ -36,7 +36,7 @@ internal class PropertyPatch
         var entry = EmployeeTweaks.EmployeeCapacityCategory.GetOrCreateEntry(
             $"EmployeeTweaks_{__instance.propertyCode}_EmpCap", __instance.EmployeeCapacity,
             $"{__instance.propertyName} Employee Capacity",
-            "Max amount of employees you can hire for this property", validator: new ValueRange<int>(1, 50));
+            "Max amount of employees you can hire for this property", validator: new ValueRange<int>(1, Mathf.CeilToInt(__instance.EmployeeCapacity * 1.5f) + 1));
         EmployeeTweaks.EmployeeCapacities.Add(entry);
         entry.OnEntryValueChanged.Subscribe((oldVal, newVal) =>
         {
