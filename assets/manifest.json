@@ -2,9 +2,10 @@
     "name": "EmployeeTweaks",
     "version_number": "1.0.0",
     "website_url": "",
-    "description": "does stuff i guess",
+    "description": "Various employee tweak - unpackaging, sprinkler/pourer use and more",
     "dependencies": [
-        "LavaGang-MelonLoader-0.7.0",
-        "the_croods-SwapperPlugin-1.2.2"
+        "LavaGang-MelonLoader-0.7.2",
+        "ifBars-S1API_Forked-3.0.3",
+        "hdlmrell-OTCLoader-1.0.5"
     ]
 }

@@ -16,8 +16,8 @@
         <RootNamespace>EmployeeTweaks</RootNamespace>
 
         <Version>1.0.0</Version>
-        <Author>me</Author>
-        <Description>does stuff i guess</Description>
+        <Author>k073l</Author>
+        <Description>Various employee tweak - unpackaging, sprinkler/pourer use and more</Description>
 
         <Configurations>Mono;IL2CPP</Configurations>
     </PropertyGroup>
@@ -25,8 +25,6 @@
     <!-- Paths to other mods that script should add (no guard for mono/il2cpp incompat) -->
     <ItemGroup><!--<ModList Include="$(CommonDir)\Mods\DisclaimerSkipMono.dll" />-->
         <!--<ModList Include="$(CommonDir)\Mods\DisclaimerSkipIL2CPP.dll" />-->
-    
-      <PackageReference Include="S1API.Forked" Version="3.0.3" />
     </ItemGroup>
 
     <PropertyGroup Condition="'$(Configuration)' == 'Mono'">
@@ -47,11 +45,20 @@
         <Publicize Include="Assembly-CSharp"/>
     </ItemGroup>
 
-    <!-- MelonLoader References -->
-    <Import Project="build\references\MelonMono.targets"/>
-    <Import Project="build\references\MelonIL2CPP.targets"/>
+    <ItemGroup>
+        <PackageReference Include="S1API.Forked" Version="3.0.3"/>
+        <PackageReference Include="HarmonyX" Version="2.10.2"/>
+        <PackageReference Include="LavaGang.MelonLoader" Version="0.7.2"/>
+    </ItemGroup>
+    <ItemGroup Label="IL2CPP-Refs" Condition="'$(IsMono)' != 'true'">
+        <PackageReference Include="RefGen.Schedule-I.Il2Cpp" Version="0.4.5-f1"/>
+        <PackageReference Include="Il2CppInterop.Common" Version="1.5.1"/>
+        <PackageReference Include="Il2CppInterop.Runtime" Version="1.5.1"/>
+    </ItemGroup>
+    <ItemGroup Label="Mono-Refs" Condition="'$(IsMono)' == 'true'">
+        <PackageReference Include="RefGen.Schedule-I.Mono" Version="0.4.5-f1"/>
+    </ItemGroup>
 
-    <!-- Events -->
     <Import Project="build\events\preBuild.targets"/>
     <Import Project="build\events\postBuild.targets"/>
 

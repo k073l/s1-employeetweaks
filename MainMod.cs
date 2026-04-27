@@ -1,6 +1,7 @@
 using System.Collections;
 using MelonLoader;
 using EmployeeTweaks.Helpers;
+using EmployeeTweaks.Patches.EmployeeArea;
 using EmployeeTweaks.Patches.FilterItemApply;
 using EmployeeTweaks.Patches.Unpackaging;
 using S1API.Entities;
@@ -12,7 +13,7 @@ using UnityEngine;
     EmployeeTweaks.BuildInfo.Version,
     EmployeeTweaks.BuildInfo.Author
 )]
-[assembly: MelonColor(1, 255, 0, 0)]
+[assembly: MelonColor(1, 217, 131, 36)]
 [assembly: MelonGame("TVGS", "Schedule I")]
 
 // Specify platform domain based on build target (remove this if your mod supports both via S1API)
@@ -27,7 +28,7 @@ namespace EmployeeTweaks;
 public static class BuildInfo
 {
     public const string Name = "EmployeeTweaks";
-    public const string Description = "Some employee stuff";
+    public const string Description = "Various employee tweak - unpackaging, sprinkler/pourer use and more";
     public const string Author = "k073l";
     public const string Version = "1.0.0";
 }
@@ -62,16 +63,6 @@ public class EmployeeTweaks : MelonMod
         DrawDebugArea.OnEntryValueChanged.Subscribe((_, _) => debugAreaDrawer.Draw());
     }
 
-    public override void OnSceneWasLoaded(int buildIndex, string sceneName)
-    {
-        Logger.Debug($"Scene loaded: {sceneName}");
-        if (sceneName == "Main")
-        {
-            Logger.Debug("Main scene loaded, waiting for player");
-            MelonCoroutines.Start(Utils.WaitForPlayer(DoStuff()));
-        }
-    }
-
     public override void OnLateUpdate()
     {
         var text = FilterConfigPanelPatches.ApplyItemAsFilterButtonText;
@@ -91,12 +82,5 @@ public class EmployeeTweaks : MelonMod
         FilterConfigPanelPatches.DenyListMode = ctrl;
 
         text.text = shift ? FilterConfigPanelPatches.Filter2 : FilterConfigPanelPatches.Filter1;
-    }
-
-    private IEnumerator DoStuff()
-    {
-        Logger.Msg("Player ready, doing stuff...");
-        yield return new WaitForSeconds(2f);
-        Logger.Msg("Did some stuff!");
     }
 }

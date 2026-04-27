@@ -1,8 +1,8 @@
-<?xml version="1.0" encoding="utf-8"?>
+<?xml version='1.0' encoding='UTF-8'?>
 <fomod>
     <Name>EmployeeTweaks</Name>
-    <Author>me</Author>
+    <Author>k073l</Author>
     <Version>1.0.0</Version>
-    <Website></Website>
-    <Description>does stuff i guess</Description>
+    <Website/>
+    <Description>Various employee tweak - unpackaging, sprinkler/pourer use and more</Description>
 </fomod>
