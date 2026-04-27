@@ -6,7 +6,7 @@ using UnityEngine;
 #if MONO
 using ScheduleOne.Property;
 #else
-
+using Il2CppScheduleOne.Property;
 #endif
 
 namespace EmployeeTweaks.Patches.EmployeeArea;
@@ -16,8 +16,9 @@ internal class PropertyPatch
 {
     private static MelonLogger.Instance Logger = new("EmployeeTweaks.PropertyPatch");
     internal static Dictionary<Property, (Vector3, Vector3)> _propertyIdlePointRects = new();
-    
-    [HarmonyPatch(nameof(Property.Awake))]
+
+    // network init early, bc Awake wasn't working on some properties of Il2Cpp bc why would it
+    [HarmonyPatch(nameof(Property.NetworkInitialize___Early))]
     [HarmonyPriority(Priority.Last - 100)]
     [HarmonyPrefix]
     private static void StorePointRectAndAddCapacity(Property __instance)
@@ -30,11 +31,12 @@ internal class PropertyPatch
             if (min == max) max = min + new Vector3(0.5f, 0f, 0.5f);
             _propertyIdlePointRects[__instance] = (min, max);
         }
+
         if (__instance.EmployeeCapacity <= 0) return;
         var entry = EmployeeTweaks.EmployeeCapacityCategory.GetOrCreateEntry(
-            $"EmployeeTweaks_{__instance.PropertyCode}_EmpCap", __instance.EmployeeCapacity,
-            $"{__instance.PropertyName} Employee Capacity",
-            "Max amount of employees you can hire for this property", validator: new ValueRange<int>(1, 100));
+            $"EmployeeTweaks_{__instance.propertyCode}_EmpCap", __instance.EmployeeCapacity,
+            $"{__instance.propertyName} Employee Capacity",
+            "Max amount of employees you can hire for this property", validator: new ValueRange<int>(1, 50));
         EmployeeTweaks.EmployeeCapacities.Add(entry);
         entry.OnEntryValueChanged.Subscribe((oldVal, newVal) =>
         {
@@ -49,47 +51,67 @@ internal class PropertyPatch
             var currentEmployees = prop.Employees?.AsEnumerable().Count() ?? 0;
             if (target < currentEmployees)
             {
-                Logger.Warning($"Cannot set capacity of {prop.PropertyName} to {target} because it currently has {currentEmployees} employees");
+                Logger.Warning(
+                    $"Cannot set capacity of {prop.propertyName} to {target} because it currently has {currentEmployees} employees");
                 entry.Value = prop.EmployeeCapacity;
                 return;
             }
+
             if (!_propertyIdlePointRects.TryGetValue(prop, out var rect))
             {
-                Logger.Warning($"Could not find idle point rect for {prop.PropertyName}, cannot add capacity");
+                Logger.Warning($"Could not find idle point rect for {prop.propertyName}, cannot add capacity");
                 entry.Value = prop.EmployeeCapacity;
                 return;
             }
-            var diff = target - prop.EmployeeIdlePoints?.Length ?? 0;
+
+            var current = prop.EmployeeIdlePoints?.Length ?? 0;
+            var diff = target - current;
             if (diff <= 0)
             {
-                entry.Value = prop.EmployeeCapacity;
+                // guarded earlier from setting less than current employees, so we can just truncate
+                if (current <= 0)
+                {
+                    // nothing we can do
+                    entry.Value = prop.EmployeeCapacity;
+                    return;
+                }
+
+                var idlePointsList = prop.EmployeeIdlePoints.AsEnumerable().ToList();
+                idlePointsList = idlePointsList.GetRange(0, target);
+                prop.EmployeeIdlePoints = idlePointsList.ToArray();
+                prop.EmployeeCapacity = idlePointsList.Count;
                 return;
             }
+
             var newPoints = PoissonDiskSampler2D.SampleAdaptive(
-                rect.Item1, rect.Item2, (prop.EmployeeIdlePoints.AsEnumerable() ?? []).ToList(), diff, 1f, 0.01f,
+                rect.Item1, rect.Item2, (prop.EmployeeIdlePoints?.AsEnumerable() ?? []).ToList(), diff, 1f, 0.01f,
                 prop.propertyCode.GetHashCode());
             if (newPoints.Count + (prop.EmployeeIdlePoints?.Length ?? 0) < target)
             {
-                Logger.Warning($"Generated {newPoints.Count} new points for {prop.PropertyName} but needed {diff}, cannot add capacity");
+                Logger.Warning(
+                    $"Generated {newPoints.Count} new points for {prop.propertyName} but needed {diff}, cannot add capacity");
                 entry.Value = prop.EmployeeCapacity;
                 return;
             }
+
             var newTransforms = new List<Transform>();
             var point = prop.EmployeeIdlePoints?.FirstOrDefault();
             if (point == null)
             {
-                Logger.Warning($"Property {prop.PropertyName} has no idle points, cannot add capacity");
+                Logger.Warning($"Property {prop.propertyName} has no idle points, cannot add capacity");
                 entry.Value = prop.EmployeeCapacity;
                 return;
             }
+
             foreach (var newPoint in newPoints)
             {
-                var go = new GameObject($"{prop.PropertyName}_EmployeeIdlePoint");
+                var go = new GameObject($"{prop.propertyName}_EmployeeIdlePoint");
                 go.transform.SetParent(point.transform.parent, false);
                 go.transform.position = newPoint;
                 go.transform.rotation = point.transform.rotation;
                 newTransforms.Add(go.transform);
             }
+
             foreach (var oldTransform in prop.EmployeeIdlePoints)
                 newTransforms.Add(oldTransform);
             prop.EmployeeIdlePoints = newTransforms.ToArray();

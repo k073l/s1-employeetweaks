@@ -1,12 +1,17 @@
 ﻿using HarmonyLib;
 using MelonLoader;
 using S1API.Internal.Abstraction;
-using ScheduleOne.ItemFramework;
 using UnityEngine.UI;
 using Object = UnityEngine.Object;
+#if MONO
+using ScheduleOne.ItemFramework;
 using ScheduleOne.UI.Items;
 using TMPro;
-using UnityEngine;
+#else
+using Il2CppScheduleOne.ItemFramework;
+using Il2CppScheduleOne.UI.Items;
+using Il2CppTMPro;
+#endif
 
 namespace EmployeeTweaks.Patches.FilterItemApply;
 

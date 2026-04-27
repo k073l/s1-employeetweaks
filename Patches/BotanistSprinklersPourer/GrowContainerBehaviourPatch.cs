@@ -1,15 +1,25 @@
 ﻿using System.Collections;
 using EmployeeTweaks.Helpers;
-using FishNet;
 using HarmonyLib;
 using MelonLoader;
+using UnityEngine;
+#if MONO
+using FishNet;
 using ScheduleOne.Employees;
 using ScheduleOne.EntityFramework;
 using ScheduleOne.ItemFramework;
 using ScheduleOne.NPCs.Behaviour;
 using ScheduleOne.ObjectScripts;
 using ScheduleOne.Tiles;
-using UnityEngine;
+#else
+using Il2CppFishNet;
+using Il2CppScheduleOne.Employees;
+using Il2CppScheduleOne.EntityFramework;
+using Il2CppScheduleOne.ItemFramework;
+using Il2CppScheduleOne.NPCs.Behaviour;
+using Il2CppScheduleOne.ObjectScripts;
+using Il2CppScheduleOne.Tiles;
+#endif
 
 namespace EmployeeTweaks.Patches.BotanistSprinklersPourer;
 
@@ -48,11 +58,12 @@ internal class GrowContainerBehaviourPatch
                 break;
             }
         }
+
         if (Utils.Is<AddSoilToGrowContainerBehaviour>(__instance, out var addSoilToGrowContainer) &&
             addSoilToGrowContainer != null)
         {
             if (!Utils.Is<Pot>(addSoilToGrowContainer._growContainer, out var pot)) return;
-            
+
             var itemsAroundPot = GetItemsAroundItem(pot);
             MelonDebug.Msg("Found " + itemsAroundPot.Count + " items around the pot");
             foreach (var item in itemsAroundPot)
@@ -68,10 +79,25 @@ internal class GrowContainerBehaviourPatch
                     addSoilToGrowContainer.Disable_Networked(null);
                     return;
                 }
+
                 ItemSlot itemSlot = null;
                 if (addSoilToGrowContainer.DoesTaskRequireItem(pot, out var itemIDs))
+                {
+#if MONO
                     itemSlot = addSoilToGrowContainer.GetItemSlotContainingRequiredItem(
                         addSoilToGrowContainer._botanist.Inventory, itemIDs);
+#else
+                    if (!Utils.Is2<IItemSlotOwner>(addSoilToGrowContainer._botanist.Inventory, out var inventory))
+                    {
+                        MelonDebug.Error("Botanist inventory does not implement IItemSlotOwner");
+                        addSoilToGrowContainer.Disable_Networked(null);
+                        return;
+                    }
+
+                    itemSlot = addSoilToGrowContainer.GetItemSlotContainingRequiredItem(inventory, itemIDs);
+#endif
+                }
+
                 var usedItem = itemSlot?.ItemInstance.GetCopy(1);
                 if (usedItem == null) return;
                 if (!Utils.Is<SoilDefinition>(usedItem.Definition, out var soilDefinition) || soilDefinition == null)
@@ -80,6 +106,7 @@ internal class GrowContainerBehaviourPatch
                     addSoilToGrowContainer.Disable_Networked(null);
                     return;
                 }
+
                 if (addSoilToGrowContainer.CheckSuccess(usedItem))
                 {
                     MelonCoroutines.Start(PourerRoutine(addSoilToGrowContainer, soilPourer, itemSlot, soilDefinition));
@@ -131,7 +158,8 @@ internal class GrowContainerBehaviourPatch
         return items;
     }
 
-    private static IEnumerator PourerRoutine(AddSoilToGrowContainerBehaviour addSoilToGrowContainerBehaviour, SoilPourer soilPourer, ItemSlot slot, SoilDefinition soilDefinition)
+    private static IEnumerator PourerRoutine(AddSoilToGrowContainerBehaviour addSoilToGrowContainerBehaviour,
+        SoilPourer soilPourer, ItemSlot slot, SoilDefinition soilDefinition)
     {
         var waitTime = addSoilToGrowContainerBehaviour.GetActionDuration() /
                        addSoilToGrowContainerBehaviour._botanist.CurrentWorkSpeed;
