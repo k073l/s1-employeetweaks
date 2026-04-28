@@ -30,7 +30,7 @@ public static class BuildInfo
     public const string Name = "EmployeeTweaks";
     public const string Description = "Various employee tweaks - unpackaging, sprinkler/pourer use and more";
     public const string Author = "k073l";
-    public const string Version = "1.0.0";
+    public const string Version = "1.0.1";
 }
 
 public class EmployeeTweaks : MelonMod
