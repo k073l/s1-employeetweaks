@@ -1,4 +1,6 @@
 # EmployeeTweaks
+[![MLVScan IL2CPP](https://mlvscan.com/attestations/att_jKd0GOUzpCxQ8stmLDSSKhLm/badge.svg)](https://mlvscan.com/attestations/att_jKd0GOUzpCxQ8stmLDSSKhLm)
+[![MLVScan Mono](https://mlvscan.com/attestations/att_w1eMqyM4hIIBX9zzN9nT6DiU/badge.svg)](https://mlvscan.com/attestations/att_w1eMqyM4hIIBX9zzN9nT6DiU)
 
 A collection of employee-related tweaks.
 
