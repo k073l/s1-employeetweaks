@@ -17,7 +17,7 @@
 
         <Version>1.0.0</Version>
         <Author>k073l</Author>
-        <Description>Various employee tweak - unpackaging, sprinkler/pourer use and more</Description>
+        <Description>Various employee tweaks - unpackaging, sprinkler/pourer use and more</Description>
 
         <Configurations>Mono;IL2CPP</Configurations>
     </PropertyGroup>

@@ -19,17 +19,17 @@ A collection of employee-related tweaks.
 
 ![Botanist using Pot Sprinkler](https://raw.githubusercontent.com/k073l/s1-employeetweaks/refs/heads/master/assets/screenshots/sprinkler.png)
 
-- Quality is now take into account when employees are consuming product
-   - For `Athletic`, `Energizing` and `Focused` higher quality will provide a greater boost than base game, while lower quality will provide a lower boost than base game
-   - For `Sedating` higher quality will reduce the penalty, while lower quality will increase the penalty
-- New Filter option in the Filter dropdown menu - `Apply Item to Filter`
-   - When this option is selected, the current item in the slot will be applied as a allowlist filter for that slot
+- **Quality** is now taken into account when **employees are consuming product**
+   - For `Athletic`, `Energizing` and `Focused` **higher quality** will provide a **greater boost** than base game, while **lower quality** will provide a **lower boost** than base game
+   - For `Sedating` **higher quality** will **reduce the penalty**, while **lower quality** will **increase the penalty**
+- **New Filter option** in the Filter dropdown menu - `Apply Item to Filter`
+   - When this option is selected, the **current item in the slot** will be applied as a **allowlist filter for that slot**
    - Holding `Shift` while clicking will change it to `Apply All to Filters`, which will apply all current items as filters for their respective slots
    - Holding `Ctrl` while clicking will cause the filter to be applied as a denylist filter instead of an allowlist filter
 
 ![Filter dropdown with Apply All to Filters option](https://raw.githubusercontent.com/k073l/s1-employeetweaks/refs/heads/master/assets/screenshots/applyfilter.png)
 
-- Preferences for adjusting employee capacity limits per property at runtime
+- Preferences for **adjusting employee capacity limits per property at runtime**
    - Configurable with any mod preferences manager solution, such as [ModsApp](https://new.thunderstore.io/c/schedule-i/p/k0Mods/ModsApp/), allows for easy adjustment when you need one more employee slot for a Cleaner
 
 ![Customizable capacities shown in ModsApp](https://raw.githubusercontent.com/k073l/s1-employeetweaks/refs/heads/master/assets/screenshots/capacities.png)

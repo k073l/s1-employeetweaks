@@ -1,8 +1,8 @@
 {
     "name": "EmployeeTweaks",
     "version_number": "1.0.0",
-    "website_url": "",
-    "description": "Various employee tweak - unpackaging, sprinkler/pourer use and more",
+    "website_url": "https://github.com/k073l/s1-employeetweaks",
+    "description": "Various employee tweaks - unpackaging, sprinkler/pourer use and more",
     "dependencies": [
         "LavaGang-MelonLoader-0.7.2",
         "ifBars-S1API_Forked-3.0.3",
