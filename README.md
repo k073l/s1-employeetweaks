@@ -43,5 +43,8 @@ A collection of employee-related tweaks.
 4. Install S1API (Forked)
 5. Launch the game
 
+## Credits
+Icons used in the mod icon: [cuboid](https://lucide.dev/icons/cuboid), [hammer](https://lucide.dev/icons/hammer), [funnel](https://lucide.dev/icons/funnel), [star](https://lucide.dev/icons/star), [fast-forward](https://lucide.dev/icons/fast-forward), [sprout](https://lucide.dev/icons/sprout), [settings](https://lucide.dev/icons/settings). Lucide. [ICS License](https://lucide.dev/license)
+
 ## License
 This mod is licensed under MIT License. See the LICENSE.md file for more information.
