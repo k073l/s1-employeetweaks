@@ -29,7 +29,7 @@ internal static class BotanistMorePots
         if (!EmployeeTweaks.EnableAssigns.Value) return;
         if (EmployeeTweaks.BotanistMaxPots.Value <= EmployeeTweaks.BotanistMaxPots.DefaultValue) return;
         var potsList = __instance?.PotsUI;
-        var go = potsList?.Entries.FirstOrDefault()?.parent.gameObject;
+        var go = potsList?.Entries.AsEnumerable().FirstOrDefault()?.parent.gameObject;
         if (go == null) return;
         var rt = go.GetComponent<RectTransform>();
         if (rt == null) return;

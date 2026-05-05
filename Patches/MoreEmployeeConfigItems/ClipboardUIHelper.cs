@@ -55,7 +55,8 @@ public static class ClipboardUIHelper
         {
             var child = source.GetChild(0);
             child.SetParent(content, false);
-            var rt = (RectTransform)child;
+            
+            if (!Utils.Is<RectTransform>(child, out var rt) || rt == null) continue;
 
             // Fix vertical anchoring
             rt.anchorMin = new Vector2(rt.anchorMin.x, 1);
@@ -107,7 +108,8 @@ public static class ClipboardUIHelper
             Object.Destroy(old);
         }
 
-        var sbGO = new GameObject("Scrollbar", typeof(RectTransform));
+        var sbGO = new GameObject("Scrollbar");
+        sbGO.GetOrAddComponent<RectTransform>();
         sbGO.transform.SetParent(root, false);
 
         var sbRT = sbGO.GetComponent<RectTransform>();
@@ -121,7 +123,8 @@ public static class ClipboardUIHelper
         bg.color = new Color(189f / 255f, 189f / 255f, 191f / 255f, 0.25f);
         bg.raycastTarget = true;
 
-        var handleGO = new GameObject("Handle", typeof(RectTransform));
+        var handleGO = new GameObject("Handle");
+        handleGO.GetOrAddComponent<RectTransform>();
         handleGO.transform.SetParent(sbGO.transform, false);
 
         var handleRT = handleGO.GetComponent<RectTransform>();

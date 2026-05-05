@@ -38,7 +38,7 @@ internal static class HandlerPatches
         if (!EmployeeTweaks.EnableAssigns.Value) return;
         if (EmployeeTweaks.HandlerMaxStations.Value <= EmployeeTweaks.HandlerMaxStations.DefaultValue) return;
         var stationList = __instance?.StationsUI;
-        var go = stationList?.Entries.FirstOrDefault()?.parent.gameObject;
+        var go = stationList?.Entries.AsEnumerable().FirstOrDefault()?.parent.gameObject;
         if (go == null) return;
         var rt = go.GetComponent<RectTransform>();
         if (rt == null) return;
@@ -58,7 +58,7 @@ internal static class HandlerPatches
         if (!EmployeeTweaks.EnableAssigns.Value) return;
         if (EmployeeTweaks.HandlerMaxRoutes.Value <= EmployeeTweaks.HandlerMaxRoutes.DefaultValue) return;
         var routeList = __instance.RoutesUI;
-        var go = routeList?.RouteEntries.FirstOrDefault()?.transform.parent.gameObject;
+        var go = routeList?.RouteEntries.AsEnumerable().FirstOrDefault()?.transform.parent.gameObject;
         if (go == null) return;
         var rt = go.GetComponent<RectTransform>();
         if (rt == null) return;

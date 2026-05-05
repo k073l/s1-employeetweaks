@@ -1,4 +1,5 @@
-﻿using HarmonyLib;
+﻿using EmployeeTweaks.Helpers;
+using HarmonyLib;
 using MelonLoader;
 using UnityEngine;
 #if MONO
@@ -17,7 +18,12 @@ public class SharedClipboardPatches
 {
     [HarmonyPatch(typeof(ObjectListFieldUI), nameof(ObjectListFieldUI.Bind))]
     [HarmonyPrefix]
-    private static void AddMissing(ObjectListFieldUI __instance, List<ObjectListField> field)
+    private static void AddMissing(ObjectListFieldUI __instance, 
+#if MONO
+        List<ObjectListField> field)
+#else
+        Il2CppSystem.Collections.Generic.List<ObjectListField> field)
+#endif
     {
         if (!EmployeeTweaks.EnableAssigns.Value) return;
         var maxFieldsNeeded = field.AsEnumerable().Max(olf => olf.MaxItems);
@@ -29,7 +35,7 @@ public class SharedClipboardPatches
         }
 
         var todo = maxFieldsNeeded - currentEntryCount;
-        var template = __instance.Entries.FirstOrDefault();
+        var template = __instance.Entries.AsEnumerable().FirstOrDefault();
         if (template == null || todo <= 0)
         {
             MelonDebug.Msg($"Not adding, template: {template} or todo {todo}");
@@ -65,7 +71,7 @@ public class SharedClipboardPatches
         }
 
         var todo = maxFieldsNeeded - currentEntryCount;
-        var template = __instance.RouteEntries.FirstOrDefault()?.gameObject;
+        var template = __instance.RouteEntries.AsEnumerable().FirstOrDefault()?.gameObject;
         if (template == null || todo <= 0)
         {
             MelonDebug.Msg($"Not adding, template: {template} or todo {todo}");
