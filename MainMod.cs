@@ -76,6 +76,16 @@ public class EmployeeTweaks : MelonMod
             "Maximum number of routes a packager can be assigned to. Changes require a restart.",
             validator: new ValueRange<int>(1, 12));
 
+    internal static MelonPreferences_Entry<int> ChemistMaxStations =
+        EmployeeAssignsCategory.CreateEntry("EmployeeTweaksChemistMaxStations", 4, "Chemist Max Stations",
+            "Maximum number of stations a chemist can be assigned to. Changes require a restart.",
+            validator: new ValueRange<int>(1, 12));
+
+    internal static MelonPreferences_Entry<int> CleanerMaxBins =
+        EmployeeAssignsCategory.CreateEntry("EmployeeTweaksCleanerMaxBins", 6, "Cleaner Max Trash Cans",
+            "Maximum number of trash cans a cleaner can be assigned to. Changes require a restart.",
+            validator: new ValueRange<int>(1, 12));
+
 
     public override void OnInitializeMelon()
     {
