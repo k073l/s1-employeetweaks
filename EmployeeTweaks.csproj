@@ -46,7 +46,7 @@
     </ItemGroup>
 
     <ItemGroup>
-        <PackageReference Include="S1API.Forked" Version="3.0.3"/>
+        <PackageReference Include="S1API.Forked" Version="3.0.2"/>
         <PackageReference Include="HarmonyX" Version="2.10.2"/>
         <PackageReference Include="LavaGang.MelonLoader" Version="0.7.2"/>
     </ItemGroup>
