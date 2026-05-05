@@ -36,13 +36,20 @@ A collection of employee-related tweaks.
 
 ![Customizable capacities shown in ModsApp](https://raw.githubusercontent.com/k073l/s1-employeetweaks/refs/heads/master/assets/screenshots/capacities.png)
 
+- Preferences for **adjusting employee max object assignments**
+  - Configurable with any mod preferences manager solution, such as [ModsApp](https://new.thunderstore.io/c/schedule-i/p/k0Mods/ModsApp/), lets you set max counts of: pots for Botanists, stations for Handlers, routes for Handlers, stations for Chemists, bins for Cleaners. Requires a game restart.
+
+![Custimizable max object assigments shown in ModsApp](https://raw.githubusercontent.com/k073l/s1-employeetweaks/refs/heads/master/assets/screenshots/objectassigns.png)
+
+![Clipboard custom max pots count for a Botanist](https://raw.githubusercontent.com/k073l/s1-employeetweaks/refs/heads/master/assets/screenshots/botanistpots.png)
+
 ## Installation
 1. Install MelonLoader
 2. Extract the zip file
 3. Place the dll file into the Mods directory for your branch
     - For none/beta use IL2CPP
     - For alternate/alternate beta use Mono
-4. Install S1API (Forked)
+4. Install S1API (Forked) (>=v3.0.2)
 5. Launch the game
 
 ## Credits

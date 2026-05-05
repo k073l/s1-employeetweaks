@@ -1,4 +1,8 @@
 # Changelog
 
+## 1.0.2
+- Added configuration options for max counts of: botanist pots, handler stations, handler routes, chemist stations, cleaner bins
+- Downgraded S1API version to 3.0.2
+- Added a dependencies checker, which prints a message if required dependencies aren't found
 ## 1.0.0
 - initial
