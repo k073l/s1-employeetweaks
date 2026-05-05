@@ -1,5 +1,7 @@
 # Changelog
 
+## 1.0.3
+- Fixed a random error on IL2CPP, which sometimes crashed the game
 ## 1.0.2
 - Added configuration options for max counts of: botanist pots, handler stations, handler routes, chemist stations, cleaner bins
 - Downgraded S1API version to 3.0.2

@@ -16,20 +16,15 @@ namespace EmployeeTweaks.Patches.MoreEmployeeConfigItems;
 [HarmonyPatch]
 internal static class HandlerPatches
 {
-    [HarmonyPatch(typeof(Packager), nameof(Packager.Awake))]
-    [HarmonyPrefix]
-    private static void AddStations(Packager __instance)
-    {
-        if (!Melon<EmployeeTweaks>.Instance.SettingsRegistry.EnableAssigns.Value) return;
-        __instance.MaxAssignedStations = Melon<EmployeeTweaks>.Instance.SettingsRegistry.HandlerMaxStations.Value;
-    }
-
     [HarmonyPatch(typeof(Packager), nameof(Packager.OnSpawnServer))]
     [HarmonyPostfix]
     private static void AddRoutes(Packager __instance)
     {
         if (!Melon<EmployeeTweaks>.Instance.SettingsRegistry.EnableAssigns.Value) return;
         __instance.configuration.Routes.MaxRoutes = Melon<EmployeeTweaks>.Instance.SettingsRegistry.HandlerMaxRoutes.Value;
+        __instance.MaxAssignedStations = Melon<EmployeeTweaks>.Instance.SettingsRegistry.HandlerMaxStations.Value;
+        __instance.configuration.Stations.MaxItems =
+            Melon<EmployeeTweaks>.Instance.SettingsRegistry.HandlerMaxStations.Value;
     }
 
     [HarmonyPatch(typeof(PackagerConfigPanel), nameof(PackagerConfigPanel.BindInternal))]
