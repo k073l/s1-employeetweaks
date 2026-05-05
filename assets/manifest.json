@@ -5,7 +5,7 @@
     "description": "Various employee tweaks - unpackaging, sprinkler/pourer use and more",
     "dependencies": [
         "LavaGang-MelonLoader-0.7.2",
-        "ifBars-S1API_Forked-3.0.1",
+        "ifBars-S1API_Forked-3.0.2",
         "hdlmrell-OTCLoader-1.0.5"
     ]
 }
