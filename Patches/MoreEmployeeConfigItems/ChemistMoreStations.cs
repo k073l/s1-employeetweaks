@@ -1,4 +1,5 @@
 ﻿using HarmonyLib;
+using MelonLoader;
 using UnityEngine;
 #if MONO
 using ScheduleOne.Employees;
@@ -18,16 +19,16 @@ internal class ChemistMoreStations
     [HarmonyPostfix]
     private static void AddStations(Chemist __instance)
     {
-        if (!EmployeeTweaks.EnableAssigns.Value) return;
-        __instance.configuration.Stations.MaxItems = EmployeeTweaks.ChemistMaxStations.Value;
+        if (!Melon<EmployeeTweaks>.Instance.SettingsRegistry.EnableAssigns.Value) return;
+        __instance.configuration.Stations.MaxItems = Melon<EmployeeTweaks>.Instance.SettingsRegistry.ChemistMaxStations.Value;
     }
     
     [HarmonyPatch(typeof(ChemistConfigPanel), nameof(ChemistConfigPanel.BindInternal))]
     [HarmonyPostfix]
     private static void AddScrollStationRect(ChemistConfigPanel __instance)
     {
-        if (!EmployeeTweaks.EnableAssigns.Value) return;
-        if (EmployeeTweaks.ChemistMaxStations.Value <= EmployeeTweaks.ChemistMaxStations.DefaultValue) return;
+        if (!Melon<EmployeeTweaks>.Instance.SettingsRegistry.EnableAssigns.Value) return;
+        if (Melon<EmployeeTweaks>.Instance.SettingsRegistry.ChemistMaxStations.Value <= Melon<EmployeeTweaks>.Instance.SettingsRegistry.ChemistMaxStations.DefaultValue) return;
         var stationList = __instance?.StationsUI;
         var go = stationList?.Entries.AsEnumerable().FirstOrDefault()?.parent.gameObject;
         if (go == null) return;
@@ -36,7 +37,7 @@ internal class ChemistMoreStations
         ClipboardUIHelper.MoveToScrollableList(rt, go.transform.parent);
         var hint = go.transform.parent.Find("Hint");
         if (hint == null) return;
-        if (EmployeeTweaks.ChemistMaxStations.Value <= 9) return;
+        if (Melon<EmployeeTweaks>.Instance.SettingsRegistry.ChemistMaxStations.Value <= 9) return;
         hint.localPosition += new Vector3(10f, 0f);
     }
 }

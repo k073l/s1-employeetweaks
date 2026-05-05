@@ -14,8 +14,8 @@ internal class DebugAreaDrawer
         foreach (var area in _areas)
             if (area != null) Object.DestroyImmediate(area);
         _areas.Clear();
-        if (!EmployeeTweaks.EnableCapacityAndDebug.Value) return;
-        if (!EmployeeTweaks.DrawDebugArea.Value) return;
+        if (!Melon<EmployeeTweaks>.Instance.SettingsRegistry.EnableCapacityAndDebug.Value) return;
+        if (!Melon<EmployeeTweaks>.Instance.SettingsRegistry.DrawDebugArea.Value) return;
         var nudge = new Vector3(0f, 0.1f, 0f);
         foreach (var area in PropertyPatch._propertyIdlePointRects.Values)
         {

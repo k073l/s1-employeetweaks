@@ -1,4 +1,5 @@
 ﻿using HarmonyLib;
+using MelonLoader;
 using UnityEngine;
 using UnityEngine.UI;
 #if MONO
@@ -19,24 +20,24 @@ internal static class HandlerPatches
     [HarmonyPrefix]
     private static void AddStations(Packager __instance)
     {
-        if (!EmployeeTweaks.EnableAssigns.Value) return;
-        __instance.MaxAssignedStations = EmployeeTweaks.HandlerMaxStations.Value;
+        if (!Melon<EmployeeTweaks>.Instance.SettingsRegistry.EnableAssigns.Value) return;
+        __instance.MaxAssignedStations = Melon<EmployeeTweaks>.Instance.SettingsRegistry.HandlerMaxStations.Value;
     }
 
     [HarmonyPatch(typeof(Packager), nameof(Packager.AssignProperty))]
     [HarmonyPostfix]
     private static void AddRoutes(Packager __instance)
     {
-        if (!EmployeeTweaks.EnableAssigns.Value) return;
-        __instance.configuration.Routes.MaxRoutes = EmployeeTweaks.HandlerMaxRoutes.Value;
+        if (!Melon<EmployeeTweaks>.Instance.SettingsRegistry.EnableAssigns.Value) return;
+        __instance.configuration.Routes.MaxRoutes = Melon<EmployeeTweaks>.Instance.SettingsRegistry.HandlerMaxRoutes.Value;
     }
 
     [HarmonyPatch(typeof(PackagerConfigPanel), nameof(PackagerConfigPanel.BindInternal))]
     [HarmonyPostfix]
     private static void AddScrollStationRect(PackagerConfigPanel __instance)
     {
-        if (!EmployeeTweaks.EnableAssigns.Value) return;
-        if (EmployeeTweaks.HandlerMaxStations.Value <= EmployeeTweaks.HandlerMaxStations.DefaultValue) return;
+        if (!Melon<EmployeeTweaks>.Instance.SettingsRegistry.EnableAssigns.Value) return;
+        if (Melon<EmployeeTweaks>.Instance.SettingsRegistry.HandlerMaxStations.Value <= Melon<EmployeeTweaks>.Instance.SettingsRegistry.HandlerMaxStations.DefaultValue) return;
         var stationList = __instance?.StationsUI;
         var go = stationList?.Entries.AsEnumerable().FirstOrDefault()?.parent.gameObject;
         if (go == null) return;
@@ -55,8 +56,8 @@ internal static class HandlerPatches
     [HarmonyPostfix]
     private static void AddScrollRouteRect(PackagerConfigPanel __instance)
     {
-        if (!EmployeeTweaks.EnableAssigns.Value) return;
-        if (EmployeeTweaks.HandlerMaxRoutes.Value <= EmployeeTweaks.HandlerMaxRoutes.DefaultValue) return;
+        if (!Melon<EmployeeTweaks>.Instance.SettingsRegistry.EnableAssigns.Value) return;
+        if (Melon<EmployeeTweaks>.Instance.SettingsRegistry.HandlerMaxRoutes.Value <= Melon<EmployeeTweaks>.Instance.SettingsRegistry.HandlerMaxRoutes.DefaultValue) return;
         var routeList = __instance.RoutesUI;
         var go = routeList?.RouteEntries.AsEnumerable().FirstOrDefault()?.transform.parent.gameObject;
         if (go == null) return;

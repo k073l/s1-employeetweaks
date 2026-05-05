@@ -25,7 +25,7 @@ public class SharedClipboardPatches
         Il2CppSystem.Collections.Generic.List<ObjectListField> field)
 #endif
     {
-        if (!EmployeeTweaks.EnableAssigns.Value) return;
+        if (!Melon<EmployeeTweaks>.Instance.SettingsRegistry.EnableAssigns.Value) return;
         var maxFieldsNeeded = field.AsEnumerable().Max(olf => olf.MaxItems);
         var currentEntryCount = __instance.Entries.Length;
         if (maxFieldsNeeded <= currentEntryCount)
@@ -61,7 +61,7 @@ public class SharedClipboardPatches
     [HarmonyPrefix]
     private static void AddMissing(RouteListFieldUI __instance)
     {
-        if (!EmployeeTweaks.EnableAssigns.Value) return;
+        if (!Melon<EmployeeTweaks>.Instance.SettingsRegistry.EnableAssigns.Value) return;
         var maxFieldsNeeded = 20;
         var currentEntryCount = __instance.RouteEntries.Length;
         if (maxFieldsNeeded <= currentEntryCount)

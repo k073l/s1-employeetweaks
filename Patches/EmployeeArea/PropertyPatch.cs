@@ -23,7 +23,7 @@ internal class PropertyPatch
     [HarmonyPrefix]
     private static void StorePointRectAndAddCapacity(Property __instance)
     {
-        if (!EmployeeTweaks.EnableCapacityAndDebug.Value) return;
+        if (!Melon<EmployeeTweaks>.Instance.SettingsRegistry.EnableCapacityAndDebug.Value) return;
         var idlePoints = __instance.EmployeeIdlePoints;
         if (idlePoints is { Length: > 0 })
         {
@@ -33,11 +33,11 @@ internal class PropertyPatch
         }
 
         if (__instance.EmployeeCapacity <= 0) return;
-        var entry = EmployeeTweaks.EmployeeCapacityCategory.GetOrCreateEntry(
+        var entry = Melon<EmployeeTweaks>.Instance.SettingsRegistry.EmployeeCapacityCategory.GetOrCreateEntry(
             $"EmployeeTweaks_{__instance.propertyCode}_EmpCap", __instance.EmployeeCapacity,
             $"{__instance.propertyName} Employee Capacity",
             "Max amount of employees you can hire for this property", validator: new ValueRange<int>(1, Mathf.CeilToInt(__instance.EmployeeCapacity * 1.5f) + 1));
-        EmployeeTweaks.EmployeeCapacities.Add(entry);
+        Melon<EmployeeTweaks>.Instance.SettingsRegistry.EmployeeCapacities.Add(entry);
         entry.OnEntryValueChanged.Subscribe((oldVal, newVal) =>
         {
             if (oldVal == newVal) return;
