@@ -1,6 +1,6 @@
 # EmployeeTweaks
-[![MLVScan IL2CPP](https://mlvscan.com/attestations/att_g9-j48j9ny3mj_kjFOraB1zg/badge.svg)](https://mlvscan.com/attestations/att_g9-j48j9ny3mj_kjFOraB1zg)
-[![MLVScan Mono](https://mlvscan.com/attestations/att_8umSlNUzu5vBrE8_AQiYT2eY/badge.svg)](https://mlvscan.com/attestations/att_8umSlNUzu5vBrE8_AQiYT2eY)
+[![MLVScan IL2CPP](https://mlvscan.com/attestations/att_A-YjFh-oXtcSbNVxkOk5hBUo/badge.svg)](https://mlvscan.com/attestations/att_A-YjFh-oXtcSbNVxkOk5hBUo)
+[![MLVScan Mono](https://mlvscan.com/attestations/att_Rafv8xRDVkguox0MHhWCGbVX/badge.svg)](https://mlvscan.com/attestations/att_Rafv8xRDVkguox0MHhWCGbVX)
 
 A collection of employee-related tweaks.
 
