@@ -1,11 +1,8 @@
-using System.Collections;
-using MelonLoader;
 using EmployeeTweaks.Helpers;
 using EmployeeTweaks.Patches.EmployeeArea;
 using EmployeeTweaks.Patches.FilterItemApply;
 using EmployeeTweaks.Patches.Unpackaging;
-using MelonLoader.Preferences;
-using S1API.Entities;
+using MelonLoader;
 using UnityEngine;
 
 [assembly: MelonInfo(
@@ -49,10 +46,10 @@ public class EmployeeTweaks : MelonMod
         Logger = LoggerInstance;
         SettingsRegistry = new SettingsRegistry();
         Logger.Msg("EmployeeTweaks initialized");
+        DependenciesChecker.PrintMissing();
         MoveItemBehaviourPatches.ManualPatchDestinationValid(HarmonyInstance);
         debugAreaDrawer = new DebugAreaDrawer();
-        Player.LocalPlayerSpawned += _ => debugAreaDrawer.Draw();
-        SettingsRegistry.DrawDebugArea.OnEntryValueChanged.Subscribe((_, _) => debugAreaDrawer.Draw());
+        DebugAreaDrawer.WireDebugAreaDrawer(debugAreaDrawer);
     }
 
     public override void OnLateUpdate()

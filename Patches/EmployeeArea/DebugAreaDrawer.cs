@@ -1,4 +1,5 @@
 ﻿using MelonLoader;
+using S1API.Entities;
 using UnityEngine;
 using Object = UnityEngine.Object;
 
@@ -72,5 +73,11 @@ internal class DebugAreaDrawer
         renderer.material = mat;
 
         return square;
+    }
+
+    internal static void WireDebugAreaDrawer(DebugAreaDrawer debugAreaDrawer)
+    {
+        Player.LocalPlayerSpawned += _ => debugAreaDrawer.Draw();
+        Melon<EmployeeTweaks>.Instance.SettingsRegistry.DrawDebugArea.OnEntryValueChanged.Subscribe((_, _) => debugAreaDrawer.Draw());
     }
 }
