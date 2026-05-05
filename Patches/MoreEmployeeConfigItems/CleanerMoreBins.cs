@@ -15,7 +15,7 @@ namespace EmployeeTweaks.Patches.MoreEmployeeConfigItems;
 [HarmonyPatch]
 internal class CleanerMoreBins
 {
-    [HarmonyPatch(typeof(Cleaner), nameof(Cleaner.AssignProperty))]
+    [HarmonyPatch(typeof(Cleaner), nameof(Cleaner.OnSpawnServer))]
     [HarmonyPostfix]
     private static void AddBins(Cleaner __instance)
     {

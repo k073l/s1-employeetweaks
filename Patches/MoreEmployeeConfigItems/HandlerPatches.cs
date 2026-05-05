@@ -24,7 +24,7 @@ internal static class HandlerPatches
         __instance.MaxAssignedStations = Melon<EmployeeTweaks>.Instance.SettingsRegistry.HandlerMaxStations.Value;
     }
 
-    [HarmonyPatch(typeof(Packager), nameof(Packager.AssignProperty))]
+    [HarmonyPatch(typeof(Packager), nameof(Packager.OnSpawnServer))]
     [HarmonyPostfix]
     private static void AddRoutes(Packager __instance)
     {
