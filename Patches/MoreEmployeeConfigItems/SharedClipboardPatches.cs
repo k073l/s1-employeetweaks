@@ -62,7 +62,7 @@ public class SharedClipboardPatches
     private static void AddMissing(RouteListFieldUI __instance)
     {
         if (!Melon<EmployeeTweaks>.Instance.SettingsRegistry.EnableAssigns.Value) return;
-        var maxFieldsNeeded = 20;
+        var maxFieldsNeeded = SettingsConstants.HandlerBoundsMaxRoutes.Item2;
         var currentEntryCount = __instance.RouteEntries.Length;
         if (maxFieldsNeeded <= currentEntryCount)
         {
