@@ -43,6 +43,8 @@ A collection of employee-related tweaks.
 
 ![Clipboard custom max pots count for a Botanist](https://raw.githubusercontent.com/k073l/s1-employeetweaks/refs/heads/master/assets/screenshots/botanistpots.png)
 
+*Note: Multiplayer may be not supported.*
+
 ## Installation
 1. Install MelonLoader
 2. Extract the zip file

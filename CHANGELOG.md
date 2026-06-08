@@ -1,5 +1,7 @@
 # Changelog
 
+## 1.0.4
+- Unpackage clipboard UI improvements - corrected the text position, added a hover highlight, added description text
 ## 1.0.3
 - Fixed a random error on IL2CPP, which sometimes crashed the game
 ## 1.0.2
