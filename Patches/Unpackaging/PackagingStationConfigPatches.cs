@@ -17,6 +17,8 @@ using HarmonyLib;
 using MelonLoader;
 using S1API.Internal.Abstraction;
 using UnityEngine;
+using UnityEngine.UI;
+using Object = UnityEngine.Object;
 
 namespace EmployeeTweaks.Patches.Unpackaging;
 
@@ -101,7 +103,17 @@ public class PackagingStationConfigPanelPatch
             var rect = toggleObj.AddComponent<RectTransform>();
 
             var destUI = __instance.DestinationUI.GetComponent<RectTransform>();
+            var destLabel = __instance.DestinationUI.FieldLabel;
+            var selection = destUI?.Find("Selection");
+            var selectionImage = selection?.GetComponent<Image>();
+            if (destUI == null || selectionImage == null || destLabel == null)
+            {
+                MelonLogger.Error("Failed to find necessary UI components for unpackage toggle");
+                return;
+            }
+
             rect.sizeDelta = new Vector2(400f, 50f);
+            toggleObj.transform.localPosition = destUI.localPosition + new Vector3(0f, -120f, 0f);
 
             var titleText = new GameObject("Title");
             titleText.transform.SetParent(toggleObj.transform, false);
@@ -111,39 +123,62 @@ public class PackagingStationConfigPanelPatch
             titleRect.anchorMax = new Vector2(0f, 0.5f);
             titleRect.pivot = new Vector2(0f, 0.5f);
             titleRect.anchoredPosition = new Vector2(0f, 0f);
-            titleRect.sizeDelta = new Vector2(150f, 30f);
+            titleRect.sizeDelta = new Vector2(200f, 30f);
 
             var tmpro = titleText.AddComponent<TextMeshProUGUI>();
-            tmpro.fontSize = 24f;
-            tmpro.alignment = TextAlignmentOptions.Left;
+            tmpro.fontSize = destLabel.fontSize;
+            tmpro.alignment = destLabel.alignment;
             tmpro.text = "Set Unpackage";
-            tmpro.color = Color.black;
+            tmpro.color = destLabel.color;
+            tmpro.font = destLabel.font;
 
-            var valueText = new GameObject("Value");
-            valueText.transform.SetParent(toggleObj.transform, false);
+            var valueRoot = new GameObject("Value");
+            var rootRect = valueRoot.AddComponent<RectTransform>();
+            valueRoot.transform.SetParent(toggleObj.transform, false);
 
-            var valueRect = valueText.AddComponent<RectTransform>();
+            rootRect.anchorMin = new Vector2(1f, 0.5f);
+            rootRect.anchorMax = new Vector2(1f, 0.5f);
+            rootRect.pivot = new Vector2(1f, 0.5f);
+            rootRect.anchoredPosition = Vector2.zero;
+            rootRect.sizeDelta = new Vector2(80f, 30f);
+
+            var img = valueRoot.AddComponent<Image>();
+
+            img.sprite = selectionImage.sprite;
+            img.overrideSprite = selectionImage.overrideSprite;
+            img.type = selectionImage.type;
+            img.material = selectionImage.material;
+            img.color = selectionImage.color;
+            img.raycastTarget = selectionImage.raycastTarget;
+            img.preserveAspect = selectionImage.preserveAspect;
+            img.pixelsPerUnitMultiplier = selectionImage.pixelsPerUnitMultiplier;
+
+            var textGo = new GameObject("Text");
+            textGo.transform.SetParent(valueRoot.transform, false);
+
+            var valueRect = textGo.AddComponent<RectTransform>();
             valueRect.anchorMin = new Vector2(1f, 0.5f);
             valueRect.anchorMax = new Vector2(1f, 0.5f);
             valueRect.pivot = new Vector2(1f, 0.5f);
             valueRect.anchoredPosition = new Vector2(0f, 0f);
             valueRect.sizeDelta = new Vector2(80f, 30f);
 
-            var valueTmpro = valueText.AddComponent<TextMeshProUGUI>();
+            var valueTmpro = textGo.AddComponent<TextMeshProUGUI>();
             valueTmpro.fontSize = 24f;
-            valueTmpro.alignment = TextAlignmentOptions.Right;
+            valueTmpro.alignment = TextAlignmentOptions.Center;
+            valueTmpro.font = destLabel.font;
             UnpackageSave.Instance.TryGetValue(stationGuid, out var isUnpackage);
             valueTmpro.text = isUnpackage ? "On" : "Off";
             valueTmpro.color = isUnpackage ? Color.green : Color.gray;
 
-            var button = valueText.AddComponent<UnityEngine.UI.Button>();
+            var button = valueRoot.AddComponent<UnityEngine.UI.Button>();
 
             button.onClick.RemoveAllListeners();
             var s = "";
             EventHelper.AddListener(() =>
             {
                 s = s;
-                MelonLogger.Msg("Button clicked");
+                MelonLogger.Msg("Toggled unpackaging setting for station " + stationGuid);
                 var save = UnpackageSave.Instance;
                 if (save?.UnpackageStations == null) return;
                 if (!save.UnpackageStations.TryAdd(stationGuid, true))
@@ -153,16 +188,30 @@ public class PackagingStationConfigPanelPatch
                 valueTmpro.color = newValue ? Color.green : Color.gray;
             }, button.onClick);
 
+            button.image = img;
+            button.targetGraphic = img;
+
             var contentPanel = __instance.GetComponent<UIContentPanel>();
 
             if (contentPanel != null)
             {
-                var selectable = valueText.GetComponent<UISelectable>();
+                var selectable = valueRoot.GetComponent<UISelectable>();
                 if (selectable == null)
-                    selectable = valueText.AddComponent<UISelectable>();
+                    selectable = valueRoot.AddComponent<UISelectable>();
 
                 contentPanel.AddSelectable(selectable);
             }
+
+            var description = destUI.Find("Description");
+            if (description == null) return;
+            var unpackageDescription = Object.Instantiate(description.gameObject);
+            var rt = unpackageDescription.GetComponent<RectTransform>();
+            rt.SetParent(toggleObj.transform, false);
+
+            rt.localPosition = Vector3.zero;
+            rt.anchoredPosition += new Vector2(0f, -50f);
+            var descriptionText = unpackageDescription.GetComponent<TextMeshProUGUI>();
+            descriptionText.text = "^The assigned packager will use this station for unpackaging product only";
         }
         catch (System.Exception ex)
         {
