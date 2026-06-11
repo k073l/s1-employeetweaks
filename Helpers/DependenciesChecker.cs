@@ -14,6 +14,13 @@ public static class DependenciesChecker
             AssemblyName = "S1API",
             MinVersion = new SemVersion(3, 0, 2),
             IsRequired = true
+        },
+        new()
+        {
+            Name = "SteamNetworkLib",
+            AssemblyName = "SteamNetworkLib",
+            MinVersion = new SemVersion(1, 2, 1),
+            IsRequired = false
         }
     ];
 

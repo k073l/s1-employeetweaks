@@ -14,6 +14,7 @@ using UnityEngine;
 )]
 [assembly: MelonColor(1, 217, 131, 36)]
 [assembly: MelonGame("TVGS", "Schedule I")]
+[assembly: MelonOptionalDependencies("SteamNetworkLib")]
 
 // Specify platform domain based on build target (remove this if your mod supports both via S1API)
 #if MONO
