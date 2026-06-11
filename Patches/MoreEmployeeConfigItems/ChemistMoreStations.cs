@@ -15,7 +15,7 @@ namespace EmployeeTweaks.Patches.MoreEmployeeConfigItems;
 [HarmonyPatch]
 internal class ChemistMoreStations
 {
-    [HarmonyPatch(typeof(Chemist), nameof(Chemist.OnSpawnServer))]
+    [HarmonyPatch(typeof(Chemist), nameof(Chemist.AssignProperty))]
     [HarmonyPostfix]
     private static void AddStations(Chemist __instance)
     {

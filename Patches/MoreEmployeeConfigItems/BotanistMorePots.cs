@@ -15,7 +15,7 @@ namespace EmployeeTweaks.Patches.MoreEmployeeConfigItems;
 [HarmonyPatch]
 internal static class BotanistMorePots
 {
-    [HarmonyPatch(typeof(Botanist), nameof(Botanist.Awake))]
+    [HarmonyPatch(typeof(Botanist), nameof(Botanist.AssignProperty))]
     [HarmonyPrefix]
     private static void Awake(Botanist __instance)
     {

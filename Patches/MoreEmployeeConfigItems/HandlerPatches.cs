@@ -16,7 +16,7 @@ namespace EmployeeTweaks.Patches.MoreEmployeeConfigItems;
 [HarmonyPatch]
 internal static class HandlerPatches
 {
-    [HarmonyPatch(typeof(Packager), nameof(Packager.OnSpawnServer))]
+    [HarmonyPatch(typeof(Packager), nameof(Packager.AssignProperty))]
     [HarmonyPostfix]
     private static void AddRoutes(Packager __instance)
     {
