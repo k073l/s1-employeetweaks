@@ -184,6 +184,7 @@ public class PackagingStationConfigPanelPatch
                 if (!save.UnpackageStations.TryAdd(stationGuid, true))
                     save.UnpackageStations[stationGuid] = !save.UnpackageStations[stationGuid];
                 var newValue = save.UnpackageStations[stationGuid];
+                Melon<EmployeeTweaks>.Instance.NetworkManager?.BroadcastStation(stationGuid.ToString(), newValue);
                 valueTmpro.text = newValue ? "On" : "Off";
                 valueTmpro.color = newValue ? Color.green : Color.gray;
             }, button.onClick);

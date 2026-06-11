@@ -33,8 +33,10 @@ internal class PropertyPatch
         }
 
         if (__instance.EmployeeCapacity <= 0) return;
-        var entry = Melon<EmployeeTweaks>.Instance.SettingsRegistry.EmployeeCapacityCategory.GetOrCreateEntry(
-            $"EmployeeTweaks_{__instance.propertyCode}_EmpCap", __instance.EmployeeCapacity,
+        var entry = Melon<EmployeeTweaks>.Instance.SettingsRegistry.EmployeeCapacityCategory.GetOrCreateNetworkedEntry(
+            $"EmployeeTweaks_{__instance.propertyCode}_EmpCap", __instance.EmployeeCapacity, 
+            Melon<EmployeeTweaks>.Instance.SettingsRegistry._boxedClient, 
+            Melon<EmployeeTweaks>.Instance.SettingsRegistry._boxedOptions, true,
             $"{__instance.propertyName} Employee Capacity",
             "Max amount of employees you can hire for this property", validator: new ValueRange<int>(1, Mathf.CeilToInt(__instance.EmployeeCapacity * 1.5f) + 1));
         Melon<EmployeeTweaks>.Instance.SettingsRegistry.EmployeeCapacities.Add(entry);

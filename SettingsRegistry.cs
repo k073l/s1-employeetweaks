@@ -1,4 +1,6 @@
-﻿using MelonLoader;
+﻿using System.Reflection;
+using EmployeeTweaks.Helpers;
+using MelonLoader;
 using MelonLoader.Preferences;
 
 namespace EmployeeTweaks;
@@ -7,27 +9,64 @@ internal class SettingsRegistry
 {
     internal MelonPreferences_Category EmployeeCapacityCategory;
 
-    internal MelonPreferences_Entry<bool> EnableCapacityAndDebug;
+    internal NetworkedMelonEntry<bool> EnableCapacityAndDebug;
 
     internal MelonPreferences_Entry<bool> DrawDebugArea;
 
-    internal HashSet<MelonPreferences_Entry<int>> EmployeeCapacities = [];
+    internal HashSet<NetworkedMelonEntry<int>> EmployeeCapacities = [];
 
     internal MelonPreferences_Category EmployeeAssignsCategory;
 
-    internal MelonPreferences_Entry<bool> EnableAssigns;
+    internal NetworkedMelonEntry<bool> EnableAssigns;
 
-    internal MelonPreferences_Entry<int> BotanistMaxPots;
+    internal NetworkedMelonEntry<int> BotanistMaxPots;
 
-    internal MelonPreferences_Entry<int> HandlerMaxStations;
+    internal NetworkedMelonEntry<int> HandlerMaxStations;
 
-    internal MelonPreferences_Entry<int> HandlerMaxRoutes;
+    internal NetworkedMelonEntry<int> HandlerMaxRoutes;
 
-    internal MelonPreferences_Entry<int> ChemistMaxStations;
+    internal NetworkedMelonEntry<int> ChemistMaxStations;
 
-    internal MelonPreferences_Entry<int> CleanerMaxBins;
+    internal NetworkedMelonEntry<int> CleanerMaxBins;
+    
+    internal object? _boxedClient = null;
+    internal object? _boxedOptions = null;
 
-    public SettingsRegistry()
+    /// <summary>
+    /// Initializes the network synchronization for preferences entries by loading the necessary types
+    /// from the SteamNetworkLib assembly and creating instances of the client and options. This method must be called
+    /// before any networked entries are created to ensure they are properly configured for synchronization.
+    /// </summary>
+    /// <param name="client">
+    /// A boxed instance of the SteamNetworkClient. This is required for network synchronization.
+    /// If <see langword="null"/>, entries will be local-only.
+    /// </param>
+    /// <returns>
+    /// <see langword="true"/> if initialization succeeded and networked entries can be created;
+    /// <see langword="false"/> if initialization failed and entries will be local-only.
+    /// </returns>
+    public bool InitializeNetwork(object? client)
+    {
+        if (client == null) return false;
+        _boxedClient = client;
+        var assembly = AppDomain.CurrentDomain.GetAssemblies()
+            .FirstOrDefault(a => a.GetName().Name == "SteamNetworkLib");
+        if (assembly == null) return false;
+
+        var type = assembly.GetType("SteamNetworkLib.Sync.NetworkSyncOptions");
+        if (type == null) return false;
+
+        _boxedOptions = Activator.CreateInstance(type);
+        if (_boxedOptions == null) return false;
+
+        var keyPrefixProperty = type.GetProperty("KeyPrefix");
+        if (keyPrefixProperty == null) return false;
+
+        keyPrefixProperty.SetValue(_boxedOptions, $"{Assembly.GetExecutingAssembly().GetName().Name}_");
+        return true;
+    }
+
+    public void InitializeCategories()
     {
         InitializeCapacityCategory();
         InitializeAssignsCategory();
@@ -38,7 +77,7 @@ internal class SettingsRegistry
         EmployeeCapacityCategory =
             MelonPreferences.CreateCategory("EmployeeTweaksEmployeeCapacity", "Employee Capacities");
         EnableCapacityAndDebug =
-            EmployeeCapacityCategory.CreateEntry("EmployeeTweaksEnableCapacityAndDebug", true, "Enable Category",
+            EmployeeCapacityCategory.GetOrCreateNetworkedEntry("EmployeeTweaksEnableCapacityAndDebug", true, _boxedClient, _boxedOptions, true, "Enable Category",
                 "Enables employee capacity tweaks and drawing employee idle points area");
         DrawDebugArea =
             EmployeeCapacityCategory.CreateEntry("EmployeeTweaksDrawDebugArea", false, "Draw Debug Area",
@@ -50,34 +89,34 @@ internal class SettingsRegistry
         EmployeeAssignsCategory =
             MelonPreferences.CreateCategory("EmployeeTweaksEmployeeAssignsCategory", "Employee Assigns Capacities");
         EnableAssigns =
-            EmployeeAssignsCategory.CreateEntry("EmployeeTweaksEnableAssigns", true, "Enable Category",
+            EmployeeAssignsCategory.GetOrCreateNetworkedEntry("EmployeeTweaksEnableAssigns", true, _boxedClient, _boxedOptions, true, "Enable Category",
                 "Enables employee assigns capacity modifications");
         BotanistMaxPots =
-            EmployeeAssignsCategory.CreateEntry("EmployeeTweaksBotanistMaxPots",
-                SettingsConstants.BotanistDefaultMaxPots, "Botanist Max Pots",
+            EmployeeAssignsCategory.GetOrCreateNetworkedEntry("EmployeeTweaksBotanistMaxPots",
+                SettingsConstants.BotanistDefaultMaxPots, _boxedClient, _boxedOptions, true, "Botanist Max Pots",
                 $"Maximum number of pots a botanist can be assigned to (allowed values from {SettingsConstants.BotanistBoundsMaxPots.Item1} to {SettingsConstants.BotanistBoundsMaxPots.Item2}). Changes require a restart.",
                 validator: new ValueRange<int>(SettingsConstants.BotanistBoundsMaxPots.Item1,
                     SettingsConstants.BotanistBoundsMaxPots.Item2));
         HandlerMaxStations =
-            EmployeeAssignsCategory.CreateEntry("EmployeeTweaksHandlerMaxStations",
-                SettingsConstants.HandlerDefaultMaxStations, "Handler Max Stations",
+            EmployeeAssignsCategory.GetOrCreateNetworkedEntry("EmployeeTweaksHandlerMaxStations",
+                SettingsConstants.HandlerDefaultMaxStations, _boxedClient, _boxedOptions, true, "Handler Max Stations",
                 $"Maximum number of stations a packager can be assigned to (allowed values from {SettingsConstants.HandlerBoundsMaxStations.Item1} to {SettingsConstants.HandlerBoundsMaxStations.Item2}). Changes require a restart.",
                 validator: new ValueRange<int>(SettingsConstants.HandlerBoundsMaxStations.Item1,
                     SettingsConstants.HandlerBoundsMaxStations.Item2));
         HandlerMaxRoutes =
-            EmployeeAssignsCategory.CreateEntry("EmployeeTweaksHandlerMaxRoutes",
-                SettingsConstants.HandlerDefaultMaxRoutes, "Handler Max Routes",
+            EmployeeAssignsCategory.GetOrCreateNetworkedEntry("EmployeeTweaksHandlerMaxRoutes",
+                SettingsConstants.HandlerDefaultMaxRoutes, _boxedClient, _boxedOptions, true, "Handler Max Routes",
                 $"Maximum number of routes a packager can be assigned to (allowed values from {SettingsConstants.HandlerBoundsMaxRoutes.Item1} to {SettingsConstants.HandlerBoundsMaxRoutes.Item2}). Changes require a restart.",
                 validator: new ValueRange<int>(SettingsConstants.HandlerBoundsMaxRoutes.Item1,
                     SettingsConstants.HandlerBoundsMaxRoutes.Item2));
         ChemistMaxStations =
-            EmployeeAssignsCategory.CreateEntry("EmployeeTweaksChemistMaxStations",
-                SettingsConstants.ChemistDefaultMaxStations, "Chemist Max Stations",
+            EmployeeAssignsCategory.GetOrCreateNetworkedEntry("EmployeeTweaksChemistMaxStations",
+                SettingsConstants.ChemistDefaultMaxStations, _boxedClient, _boxedOptions, true, "Chemist Max Stations",
                 $"Maximum number of stations a chemist can be assigned to (allowed values from {SettingsConstants.ChemistBoundsMaxStations.Item1} to {SettingsConstants.ChemistBoundsMaxStations.Item2}). Changes require a restart.",
                 validator: new ValueRange<int>(SettingsConstants.ChemistBoundsMaxStations.Item1,
                     SettingsConstants.ChemistBoundsMaxStations.Item2));
         CleanerMaxBins =
-            EmployeeAssignsCategory.CreateEntry("EmployeeTweaksCleanerMaxBins", SettingsConstants.CleanerDefaultMaxBins,
+            EmployeeAssignsCategory.GetOrCreateNetworkedEntry("EmployeeTweaksCleanerMaxBins", SettingsConstants.CleanerDefaultMaxBins, _boxedClient, _boxedOptions, true,
                 "Cleaner Max Trash Cans",
                 $"Maximum number of trash cans a cleaner can be assigned to (allowed values from {SettingsConstants.CleanerBoundsMaxBins.Item1} to {SettingsConstants.CleanerBoundsMaxBins.Item2}). Changes require a restart.",
                 validator: new ValueRange<int>(SettingsConstants.CleanerBoundsMaxBins.Item1,

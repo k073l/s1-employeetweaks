@@ -8,7 +8,7 @@
         <!-- <DefineConstants>$(DefineConstants);DEBUG</DefineConstants> -->
 
         <ImplicitUsings>enable</ImplicitUsings>
-        <Nullable>disable</Nullable>
+        <Nullable>enable</Nullable>
         <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
         <LangVersion>latest</LangVersion>
         <ImplicitUsings>enable</ImplicitUsings>
@@ -25,6 +25,8 @@
     <!-- Paths to other mods that script should add (no guard for mono/il2cpp incompat) -->
     <ItemGroup><!--<ModList Include="$(CommonDir)\Mods\DisclaimerSkipMono.dll" />-->
         <!--<ModList Include="$(CommonDir)\Mods\DisclaimerSkipIL2CPP.dll" />-->
+    
+      <Folder Include="build\lib\" />
     </ItemGroup>
 
     <PropertyGroup Condition="'$(Configuration)' == 'Mono'">
@@ -54,9 +56,15 @@
         <PackageReference Include="RefGen.Schedule-I.Il2Cpp" Version="0.4.5-f1"/>
         <PackageReference Include="Il2CppInterop.Common" Version="1.5.1"/>
         <PackageReference Include="Il2CppInterop.Runtime" Version="1.5.1"/>
+        <Reference Include="SteamNetworkLib">
+            <HintPath>build/lib/SteamNetworkLib-IL2Cpp.dll</HintPath>
+        </Reference>
     </ItemGroup>
     <ItemGroup Label="Mono-Refs" Condition="'$(IsMono)' == 'true'">
         <PackageReference Include="RefGen.Schedule-I.Mono" Version="0.4.5-f1"/>
+        <Reference Include="SteamNetworkLib">
+            <HintPath>build/lib/SteamNetworkLib-Mono.dll</HintPath>
+        </Reference>
     </ItemGroup>
 
     <Import Project="build\events\preBuild.targets"/>

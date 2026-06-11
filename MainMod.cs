@@ -1,4 +1,5 @@
 using EmployeeTweaks.Helpers;
+using EmployeeTweaks.Network;
 using EmployeeTweaks.Patches.EmployeeArea;
 using EmployeeTweaks.Patches.FilterItemApply;
 using EmployeeTweaks.Patches.Unpackaging;
@@ -39,17 +40,30 @@ public class EmployeeTweaks : MelonMod
     private bool _lastCtrl;
 
     internal SettingsRegistry SettingsRegistry;
-
+    internal INetworkManager? NetworkManager;
 
     public override void OnInitializeMelon()
     {
         Logger = LoggerInstance;
-        SettingsRegistry = new SettingsRegistry();
-        Logger.Msg("EmployeeTweaks initialized");
         DependenciesChecker.PrintMissing();
         MoveItemBehaviourPatches.ManualPatchDestinationValid(HarmonyInstance);
+    }
+
+    public override void OnLateInitializeMelon()
+    {
+        SettingsRegistry = new SettingsRegistry();
+        NetworkManager = NetworkLoader.Create();
+        if (NetworkManager == null)
+            Logger.Warning("NetworkManager is null, multiplayer features will be unavailable.");
+        SettingsRegistry.InitializeCategories();
         debugAreaDrawer = new DebugAreaDrawer();
         DebugAreaDrawer.WireDebugAreaDrawer(debugAreaDrawer);
+        Logger.Msg("EmployeeTweaks initialized");
+    }
+
+    public override void OnUpdate()
+    {
+        NetworkManager?.Update();
     }
 
     public override void OnLateUpdate()
@@ -71,5 +85,10 @@ public class EmployeeTweaks : MelonMod
         FilterConfigPanelPatches.DenyListMode = ctrl;
 
         text.text = shift ? FilterConfigPanelPatches.Filter2 : FilterConfigPanelPatches.Filter1;
+    }
+    
+    public override void OnDeinitializeMelon()
+    {
+        NetworkManager?.Dispose();
     }
 }
