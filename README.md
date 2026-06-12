@@ -43,7 +43,7 @@ A collection of employee-related tweaks.
 
 ![Clipboard custom max pots count for a Botanist](https://raw.githubusercontent.com/k073l/s1-employeetweaks/refs/heads/master/assets/screenshots/botanistpots.png)
 
-*Note: Multiplayer may be not supported.*
+*Note: Multiplayer support is experimental (v1.0.5+).*
 
 ## Installation
 1. Install MelonLoader
@@ -52,7 +52,8 @@ A collection of employee-related tweaks.
     - For none/beta use IL2CPP
     - For alternate/alternate beta use Mono
 4. Install S1API (Forked) (>=v3.0.2)
-5. Launch the game
+5. Install SteamNetworkLib (>=v1.2.1) - optional, only required for multiplayer support
+6. Launch the game
 
 ## Credits
 Icons used in the mod icon: [cuboid](https://lucide.dev/icons/cuboid), [hammer](https://lucide.dev/icons/hammer), [funnel](https://lucide.dev/icons/funnel), [star](https://lucide.dev/icons/star), [fast-forward](https://lucide.dev/icons/fast-forward), [sprout](https://lucide.dev/icons/sprout), [settings](https://lucide.dev/icons/settings). Lucide. [ICS License](https://lucide.dev/license)

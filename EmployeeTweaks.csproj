@@ -15,7 +15,7 @@
 
         <RootNamespace>EmployeeTweaks</RootNamespace>
 
-        <Version>1.0.4</Version>
+        <Version>1.0.5</Version>
         <Author>k073l</Author>
         <Description>Various employee tweaks - unpackaging, sprinkler/pourer use and more</Description>
 
@@ -25,8 +25,7 @@
     <!-- Paths to other mods that script should add (no guard for mono/il2cpp incompat) -->
     <ItemGroup><!--<ModList Include="$(CommonDir)\Mods\DisclaimerSkipMono.dll" />-->
         <!--<ModList Include="$(CommonDir)\Mods\DisclaimerSkipIL2CPP.dll" />-->
-    
-      <Folder Include="build\lib\" />
+
     </ItemGroup>
 
     <PropertyGroup Condition="'$(Configuration)' == 'Mono'">

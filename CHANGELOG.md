@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.0.5
+- Fixed a bug where multiplayer clients would not see more employee config items
+- Added experimental multiplayer support, including host-authoritative settings and syncing of unpackaging stations
+- Improved dependency checking and error messages for missing dependencies
 ## 1.0.4
 - Unpackage clipboard UI improvements - corrected the text position, added a hover highlight, added description text
 ## 1.0.3

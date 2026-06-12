@@ -30,7 +30,7 @@ public static class BuildInfo
     public const string Name = "EmployeeTweaks";
     public const string Description = "Various employee tweaks - unpackaging, sprinkler/pourer use and more";
     public const string Author = "k073l";
-    public const string Version = "1.0.4";
+    public const string Version = "1.0.5";
 }
 
 public class EmployeeTweaks : MelonMod
@@ -46,7 +46,7 @@ public class EmployeeTweaks : MelonMod
     public override void OnInitializeMelon()
     {
         Logger = LoggerInstance;
-        DependenciesChecker.PrintMissing();
+        CheckDependencies();
         MoveItemBehaviourPatches.ManualPatchDestinationValid(HarmonyInstance);
     }
 
@@ -87,9 +87,74 @@ public class EmployeeTweaks : MelonMod
 
         text.text = shift ? FilterConfigPanelPatches.Filter2 : FilterConfigPanelPatches.Filter1;
     }
-    
+
     public override void OnDeinitializeMelon()
     {
         NetworkManager?.Dispose();
+    }
+
+    private static void CheckDependencies()
+    {
+        var depChecker = new DependenciesChecker
+        {
+            ShowMenuBanner = true,
+            UnloadIfMissingRequired = true,
+        };
+        depChecker.AddDependency(new DependencyInfo
+        {
+            Name = "S1API (Forked)",
+            AssemblyName = "S1API",
+            IsRequired = true,
+            Version = "3.0.2",
+            Urls =
+            [
+                new DependencyUrl
+                {
+                    SourceName = "Thunderstore",
+                    Url = "https://thunderstore.io/c/schedule-i/p/ifBars/S1API_Forked/"
+                },
+                new DependencyUrl
+                {
+                    SourceName = "NexusMods",
+                    Url = "https://www.nexusmods.com/schedule1/mods/1194"
+                },
+                new DependencyUrl
+                {
+                    SourceName = "Github",
+                    Url = "https://github.com/ifBars/S1API/releases/"
+                }
+            ]
+        });
+        depChecker.AddDependency(new DependencyInfo
+        {
+            Name = "SteamNetworkLib",
+            AssemblyName = "SteamNetworkLib",
+            IsRequired = false,
+            Version = "1.2.1",
+            Urls =
+            [
+                new DependencyUrl
+                {
+                    SourceName = "Thunderstore Il2Cpp",
+                    Url = "https://thunderstore.io/c/schedule-i/p/ifBars/SteamNetworkLib_Il2Cpp/"
+                },
+                new DependencyUrl
+                {
+                    SourceName = "Thunderstore Mono",
+                    Url = "https://thunderstore.io/c/schedule-i/p/ifBars/SteamNetworkLib_Mono/"
+                },
+                new DependencyUrl
+                {
+                    SourceName = "NexusMods",
+                    Url = "https://www.nexusmods.com/schedule1/mods/1396"
+                },
+                new DependencyUrl
+                {
+                    SourceName = "Github",
+                    Url = "https://github.com/ifBars/SteamNetworkLib/releases"
+                }
+            ]
+        });
+        depChecker.ProcessAndAlert();
     }
 }
