@@ -1,5 +1,7 @@
-﻿using EmployeeTweaks.Helpers;
+﻿using System.Reflection;
+using EmployeeTweaks.Helpers;
 using HarmonyLib;
+using Il2CppAeLa.EasyFeedback.APIs;
 using MelonLoader;
 using MelonLoader.Preferences;
 using UnityEngine;
@@ -11,14 +13,14 @@ using Il2CppScheduleOne.Property;
 
 namespace EmployeeTweaks.Patches.EmployeeArea;
 
-[HarmonyPatch(typeof(Property))]
+[HarmonyPatch]
 internal class PropertyPatch
 {
     private static MelonLogger.Instance Logger = new("EmployeeTweaks.PropertyPatch");
     internal static Dictionary<Property, (Vector3, Vector3)> _propertyIdlePointRects = new();
 
     // network init early, bc Awake wasn't working on some properties of Il2Cpp bc why would it
-    [HarmonyPatch(nameof(Property.NetworkInitialize___Early))]
+    [HarmonyPatch(typeof(Property), nameof(Property.NetworkInitialize___Early))]
     [HarmonyPriority(Priority.Last - 100)]
     [HarmonyPrefix]
     private static void StorePointRectAndAddCapacity(Property __instance)
@@ -34,11 +36,12 @@ internal class PropertyPatch
 
         if (__instance.EmployeeCapacity <= 0) return;
         var entry = Melon<EmployeeTweaks>.Instance.SettingsRegistry.EmployeeCapacityCategory.GetOrCreateNetworkedEntry(
-            $"EmployeeTweaks_{__instance.propertyCode}_EmpCap", __instance.EmployeeCapacity, 
-            Melon<EmployeeTweaks>.Instance.SettingsRegistry._boxedClient, 
+            $"EmployeeTweaks_{__instance.propertyCode}_EmpCap", __instance.EmployeeCapacity,
+            Melon<EmployeeTweaks>.Instance.SettingsRegistry._boxedClient,
             Melon<EmployeeTweaks>.Instance.SettingsRegistry._boxedOptions, true,
             $"{__instance.propertyName} Employee Capacity",
-            "Max amount of employees you can hire for this property", validator: new ValueRange<int>(1, Mathf.CeilToInt(__instance.EmployeeCapacity * 1.5f) + 1));
+            "Max amount of employees you can hire for this property",
+            validator: new ValueRange<int>(1, Mathf.CeilToInt(__instance.EmployeeCapacity * 1.5f) + 1));
         Melon<EmployeeTweaks>.Instance.SettingsRegistry.EmployeeCapacities.Add(entry);
         entry.OnEntryValueChanged.Subscribe((oldVal, newVal) =>
         {
@@ -118,6 +121,40 @@ internal class PropertyPatch
                 newTransforms.Add(oldTransform);
             prop.EmployeeIdlePoints = newTransforms.ToArray();
             prop.EmployeeCapacity = newTransforms.Count;
+        }
+    }
+
+    // Catch late updates to idle points - compatibility with other mods
+    private static void CatchLate(Property __instance)
+    {
+        Logger.Debug($"Catching late update for {__instance?.name}");
+        if (__instance == null) return;
+        if (_propertyIdlePointRects.ContainsKey(__instance)) return;
+        StorePointRectAndAddCapacity(__instance);
+    }
+
+    public static void ManualPatchProperties(HarmonyLib.Harmony harmony)
+    {
+        // Bungalow also seems to patch RV and MotelRoom? Alright
+        List<Type> types = [typeof(Bungalow), typeof(Manor), typeof(SewerOffice), typeof(Business), typeof(Property)];
+        foreach (var type in types)
+        {
+            var method = type.GetMethod(
+                "Awake",
+                BindingFlags.Instance |
+                BindingFlags.Public |
+                BindingFlags.NonPublic |
+                BindingFlags.DeclaredOnly);
+            if (method == null)
+            {
+                Logger.Warning($"Could not find Awake method for {type.FullName}");
+                continue;
+            }
+            Logger.Debug($"Patching {type.FullName}");
+
+            harmony.Patch(method,
+                postfix: new HarmonyMethod(typeof(PropertyPatch).GetMethod(nameof(CatchLate),
+                    System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static)));
         }
     }
 

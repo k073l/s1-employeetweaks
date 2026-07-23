@@ -48,6 +48,7 @@ public class EmployeeTweaks : MelonMod
         Logger = LoggerInstance;
         CheckDependencies();
         MoveItemBehaviourPatches.ManualPatchDestinationValid(HarmonyInstance);
+        PropertyPatch.ManualPatchProperties(HarmonyInstance);
     }
 
     public override void OnLateInitializeMelon()
