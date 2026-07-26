@@ -32,6 +32,7 @@ namespace EmployeeTweaks.Patches.Unpackaging;
 [HarmonyPatch(typeof(MoveItemBehaviour))]
 internal static class MoveItemBehaviourPatches
 {
+    private static readonly MelonLogger.Instance Logger = new("EmployeeTweaks.MoveItemBehaviourPatches");
     private static Dictionary<MoveItemBehaviour, object> customGrabRunning = new();
     private static Dictionary<MoveItemBehaviour, object> customPlaceRunning = new();
 
@@ -291,31 +292,32 @@ internal static class MoveItemBehaviourPatches
             var sourceAccessPoint = __instance.GetSourceAccessPoint(__instance.assignedRoute);
             if (sourceAccessPoint == null)
             {
-                Console.LogWarning("Could not find source access point!");
+                LogWarning("Could not find source access point!");
                 __instance.grabRoutine = null;
                 __instance.Disable_Networked(null);
-                var coro = customGrabRunning[__instance];
-                customGrabRunning.Remove(__instance);
-                MelonCoroutines.Stop(coro);
             }
             else
             {
                 __instance.Npc.Movement.FaceDirection(sourceAccessPoint.forward);
                 __instance.Npc.SetAnimationTrigger_Networked(null, "GrabItem");
-                if (!Utils.Is<Employee>(__instance.Npc, out var employee) || employee == null) yield break;
+                if (!Utils.Is<Employee>(__instance.Npc, out var employee) || employee == null)
+                {
+                    Logger.Debug("Could not find employee!");
+                    yield break;
+                }
                 var seconds = TimeManager.TickDuration / employee.CurrentWorkSpeed;
                 yield return new WaitForSeconds(seconds);
-                if (__instance.itemToRetrieveTemplate?.ID == null) yield break;
+                if (__instance.itemToRetrieveTemplate?.ID == null)
+                {
+                    Logger.Debug("Could not find item to retrieve template!");
+                    yield break;
+                }
                 if (!__instance.IsTransitRouteValid(__instance.assignedRoute, __instance.itemToRetrieveTemplate.ID,
                         out var invalidReason))
                 {
-                    Console.LogWarning(
-                        $"{__instance.Npc.fullName} transit route no longer valid! Reason: {invalidReason}");
+                   LogWarning($"{__instance.Npc.fullName} transit route no longer valid! Reason: {invalidReason}");
                     __instance.grabRoutine = null;
                     __instance.Disable_Networked(null);
-                    var coro = customGrabRunning[__instance];
-                    customGrabRunning.Remove(__instance);
-                    MelonCoroutines.Stop(coro);
                 }
                 else
                 {
@@ -323,11 +325,9 @@ internal static class MoveItemBehaviourPatches
                     yield return new WaitForSeconds(TimeManager.TickDuration);
                     __instance.grabRoutine = null;
                     __instance.currentState = MoveItemBehaviour.EState.Idle;
-                    var coro = customGrabRunning[__instance];
-                    customGrabRunning.Remove(__instance);
-                    MelonCoroutines.Stop(coro);
                 }
             }
+            customGrabRunning.Remove(__instance);
         }
     }
 
@@ -353,14 +353,18 @@ internal static class MoveItemBehaviourPatches
         var amountToGrab = __instance.GetAmountToGrab();
         if (amountToGrab == 0)
         {
-            Console.LogWarning("Amount to grab is 0!");
+            LogWarning("Amount to grab is 0!");
             return false;
         }
 
         var firstSlotContainingTemplateItem =
             __instance.assignedRoute.Source.GetFirstSlotContainingTemplateItem(__instance.itemToRetrieveTemplate,
                 destIsStation ? ITransitEntity.ESlotType.Output : ITransitEntity.ESlotType.Input);
-        if (firstSlotContainingTemplateItem?.ItemInstance == null) return false;
+        if (firstSlotContainingTemplateItem?.ItemInstance == null)
+        {
+            Logger.Debug("Could not find first slot containing item!");
+            return false;
+        }
         var copy = firstSlotContainingTemplateItem.ItemInstance.GetCopy(amountToGrab);
         __instance.grabbedAmount = amountToGrab;
         firstSlotContainingTemplateItem.ChangeQuantity(-amountToGrab);
@@ -404,6 +408,7 @@ internal static class MoveItemBehaviourPatches
             __instance.Npc.SetAnimationTrigger_Networked(null, "GrabItem");
             if (!Utils.Is<Employee>(__instance.Npc, out var employee) || employee == null)
             {
+                Logger.Debug("Could not find employee!");
                 customPlaceRunning.Remove(__instance);
                 yield break;
             }
@@ -427,13 +432,13 @@ internal static class MoveItemBehaviourPatches
                     }
                     else
                     {
-                        Console.LogWarning(
+                        LogWarning(
                             "Destination does not have enough capacity for item! Attempting to return item to source.");
                         if (__instance.assignedRoute.Source.GetOutputCapacityForItem(copy, __instance.Npc) >=
                             __instance.grabbedAmount)
                             __instance.assignedRoute.Source.InsertItemIntoOutput(copy, __instance.Npc);
                         else
-                            Console.LogError("Source does not have enough capacity for item! Item will be lost.");
+                            LogError("Source does not have enough capacity for item! Item will be lost.");
                     }
                 }
                 else
@@ -444,28 +449,26 @@ internal static class MoveItemBehaviourPatches
                     }
                     else
                     {
-                        Console.LogWarning(
+                        LogWarning(
                             "Destination does not have enough capacity for item! Attempting to return item to source.");
                         if (__instance.assignedRoute.Source.GetOutputCapacityForItem(copy, __instance.Npc) >=
                             __instance.grabbedAmount)
                             __instance.assignedRoute.Source.InsertItemIntoOutput(copy, __instance.Npc);
                         else
-                            Console.LogError("Source does not have enough capacity for item! Item will be lost.");
+                            LogError("Source does not have enough capacity for item! Item will be lost.");
                     }
                 }
 
                 firstIdenticalItem.ChangeQuantity(-__instance.grabbedAmount);
             }
             else
-                Console.LogWarning("Could not find carried item to place!");
+                LogWarning("Could not find carried item to place!");
 
             yield return new WaitForSeconds(TimeManager.TickDuration);
             __instance.placingRoutine = null;
             __instance.currentState = MoveItemBehaviour.EState.Idle;
             __instance.Disable_Networked(null);
-            var coro = customPlaceRunning[__instance];
             customPlaceRunning.Remove(__instance);
-            MelonCoroutines.Stop(coro);
         }
     }
 
@@ -507,7 +510,7 @@ internal static class MoveItemBehaviourPatches
         if (!InstanceFinder.IsServer) return false;
         if (!__instance.assignedRoute.AreEntitiesNonNull())
         {
-            Console.LogWarning("Transit route entities are null!");
+            LogWarning("Transit route entities are null!");
             __instance.Disable_Networked(null);
             return false;
         }
@@ -564,7 +567,7 @@ internal static class MoveItemBehaviourPatches
             if (!__instance.IsTransitRouteValid(__instance.assignedRoute, __instance.itemToRetrieveTemplate.ID,
                     out var invalidReason))
             {
-                Console.LogWarning(
+                LogWarning(
                     "Invalid transit route for move item behaviour by checking transit route!. Reason: " +
                     invalidReason);
                 __instance.Disable_Networked(null);
@@ -592,7 +595,7 @@ internal static class MoveItemBehaviourPatches
 
             if (!__instance.IsDestinationValid(__instance.assignedRoute, firstIdenticalItem, out var invalidReason))
             {
-                Console.LogWarning("Invalid transit route for move item behaviour by checking destination! Reason: " +
+                LogWarning("Invalid transit route for move item behaviour by checking destination! Reason: " +
                                    invalidReason);
                 __instance.Disable_Networked(null);
                 return false;
@@ -601,5 +604,17 @@ internal static class MoveItemBehaviourPatches
 
         __instance.currentState = MoveItemBehaviour.EState.Idle;
         return false;
+    }
+    
+    private static void LogWarning(string msg)
+    {
+        Console.LogWarning(msg);
+        Logger.Debug(msg);
+    }
+    
+    private static void LogError(string msg)
+    {
+        Console.LogError(msg);
+        Logger.Debug(msg);
     }
 }
