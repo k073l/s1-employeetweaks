@@ -89,7 +89,7 @@ internal class PropertyPatch
             }
 
             var newPoints = PoissonDiskSampler2D.SampleAdaptive(
-                rect.Item1, rect.Item2, (prop.EmployeeIdlePoints?.AsEnumerable() ?? []).ToList(), diff, 1f, 0.01f,
+                rect.Item1, rect.Item2, (prop.EmployeeIdlePoints?.AsEnumerable() ?? []).ToList(), diff, 1f, 0.1f,
                 prop.propertyCode.GetHashCode());
             if (newPoints.Count + (prop.EmployeeIdlePoints?.Length ?? 0) < target)
             {
@@ -229,8 +229,8 @@ public static class PoissonDiskSampler2D
     {
         var cellSize = radius / Mathf.Sqrt(2f);
 
-        var width = Mathf.CeilToInt((max.x - min.x) / cellSize);
-        var height = Mathf.CeilToInt((max.z - min.z) / cellSize);
+        var width = Mathf.Max(1, Mathf.CeilToInt((max.x - min.x) / cellSize));
+        var height = Mathf.Max(1, Mathf.CeilToInt((max.z - min.z) / cellSize));
 
         var grid = new Vector3?[width, height];
         var active = new List<Vector3>();
