@@ -1,5 +1,7 @@
 ﻿using System.Reflection;
 using EmployeeTweaks.Helpers;
+using EmployeeTweaks.Patches.MoreEmployeeConfigItems;
+using EmployeeTweaks.Patches.Unpackaging;
 using MelonLoader;
 using MelonLoader.Preferences;
 
@@ -28,6 +30,14 @@ internal class SettingsRegistry
     internal NetworkedMelonEntry<int> ChemistMaxStations;
 
     internal NetworkedMelonEntry<int> CleanerMaxBins;
+    
+    internal MelonPreferences_Category EmployeeTweaksDebugCategory;
+    
+    internal MelonPreferences_Entry<bool> EnableNetworkDebug;
+    
+    internal MelonPreferences_Entry<bool> EnableConfigItemsDebug;
+    
+    internal MelonPreferences_Entry<bool> EnableUnpackagingDebug;
     
     internal object? _boxedClient = null;
     internal object? _boxedOptions = null;
@@ -70,6 +80,7 @@ internal class SettingsRegistry
     {
         InitializeCapacityCategory();
         InitializeAssignsCategory();
+        InitializeModDebugCategory();
     }
 
     private void InitializeCapacityCategory()
@@ -121,6 +132,39 @@ internal class SettingsRegistry
                 $"Maximum number of trash cans a cleaner can be assigned to (allowed values from {SettingsConstants.CleanerBoundsMaxBins.Item1} to {SettingsConstants.CleanerBoundsMaxBins.Item2}). Changes require a restart.",
                 validator: new ValueRange<int>(SettingsConstants.CleanerBoundsMaxBins.Item1,
                     SettingsConstants.CleanerBoundsMaxBins.Item2));
+    }
+
+    private void InitializeModDebugCategory()
+    {
+        EmployeeTweaksDebugCategory =
+            MelonPreferences.CreateCategory("EmployeeTweaksDebug", "Employee Tweaks Debug&Troubleshooting");
+        EnableNetworkDebug =
+            EmployeeTweaksDebugCategory.CreateEntry("EmployeeTweaksEnableNetworkDebug", false, "Enable Network Debug",
+                "Enables debug logging for networked preferences");
+        EnableConfigItemsDebug =
+            EmployeeTweaksDebugCategory.CreateEntry("EmployeeTweaksEnableConfigItemsDebug", false, "Enable Config Items Debug",
+                "Enables debug logging for employee config items");
+        EnableUnpackagingDebug =
+            EmployeeTweaksDebugCategory.CreateEntry("EmployeeTweaksEnableUnpackagingDebug", false, "Enable Unpackaging Debug",
+                "Enables debug logging for unpackaging");
+    }
+
+    private void PushLoggerSettings()
+    {
+        // NetworkDebug is handled by NetworkManager
+
+        SetAndRegister(ClipboardUIHelper.Logger, EnableConfigItemsDebug);
+        SetAndRegister(SharedClipboardPatches.Logger, EnableConfigItemsDebug);
+
+        SetAndRegister(PackagingStationConfigPanelPatch.Logger, EnableUnpackagingDebug);
+        SetAndRegister(MoveItemBehaviourPatches.Logger, EnableUnpackagingDebug);
+        SetAndRegister(PackagerPatches.Logger, EnableUnpackagingDebug);
+    }
+
+    private void SetAndRegister(Logger logger, MelonPreferences_Entry<bool>? entry)
+    {
+        logger.RaiseDebug = entry?.Value ?? false;
+        entry?.OnEntryValueChanged.Subscribe((_, newValue) => logger.RaiseDebug = newValue);
     }
 }
 

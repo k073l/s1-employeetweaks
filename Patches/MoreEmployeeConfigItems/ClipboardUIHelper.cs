@@ -3,14 +3,14 @@ using MelonLoader;
 using S1API.UI;
 using UnityEngine;
 using UnityEngine.UI;
+using Logger = EmployeeTweaks.Helpers.Logger;
 using Object = UnityEngine.Object;
 
 namespace EmployeeTweaks.Patches.MoreEmployeeConfigItems;
 
 public static class ClipboardUIHelper
 {
-    private static readonly MelonLogger.Instance Logger =
-        new($"{nameof(EmployeeTweaks)}.{nameof(MoreEmployeeConfigItems)}");
+    internal static readonly Logger Logger = new(nameof(MoreEmployeeConfigItems));
 
     public static ScrollRect MoveToScrollableList(RectTransform source, Transform parent)
     {

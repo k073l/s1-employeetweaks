@@ -3,6 +3,7 @@ using EmployeeTweaks.Helpers;
 using HarmonyLib;
 using MelonLoader;
 using UnityEngine;
+using Logger = EmployeeTweaks.Helpers.Logger;
 #if MONO
 using FishNet;
 using ScheduleOne.Employees;
@@ -26,6 +27,7 @@ namespace EmployeeTweaks.Patches.BotanistSprinklersPourer;
 [HarmonyPatch(typeof(GrowContainerBehaviour))]
 internal class GrowContainerBehaviourPatch
 {
+    private static readonly Logger Logger = new("GrowContainerBehaviour");
     [HarmonyPatch(nameof(GrowContainerBehaviour.OnActiveTick))]
     [HarmonyPostfix]
     private static void UseSprinklerOrPourer(GrowContainerBehaviour __instance)
@@ -38,13 +40,13 @@ internal class GrowContainerBehaviourPatch
             if (!Utils.Is<Pot>(waterPotBehaviour._growContainer, out var pot)) return;
 
             var itemsAroundPot = GetItemsAroundItem(pot);
-            MelonDebug.Msg("Found " + itemsAroundPot.Count + " items around the pot");
+            Logger.D("Found " + itemsAroundPot.Count + " items around the pot");
             foreach (var item in itemsAroundPot)
             {
                 if (!Utils.Is<Sprinkler>(item, out var sprinkler) || sprinkler == null) continue;
                 var sprinklerEligiblePots = sprinkler.GetPots();
                 if (sprinklerEligiblePots.AsEnumerable().FirstOrDefault(x => x != null && x == pot) == null) continue;
-                MelonDebug.Msg("It's an eligible sprinkler, activating it");
+                Logger.D("It's an eligible sprinkler, activating it");
                 if (!sprinkler.IsSprinkling)
                     sprinkler.Interacted();
                 waterPotBehaviour.OnStopPerformAction();
@@ -65,17 +67,17 @@ internal class GrowContainerBehaviourPatch
             if (!Utils.Is<Pot>(addSoilToGrowContainer._growContainer, out var pot)) return;
 
             var itemsAroundPot = GetItemsAroundItem(pot);
-            MelonDebug.Msg("Found " + itemsAroundPot.Count + " items around the pot");
+            Logger.D("Found " + itemsAroundPot.Count + " items around the pot");
             foreach (var item in itemsAroundPot)
             {
                 if (!Utils.Is<SoilPourer>(item, out var soilPourer) || soilPourer == null) continue;
                 var soilPourerEligiblePots = soilPourer.GetPots();
                 if (soilPourerEligiblePots.AsEnumerable().FirstOrDefault(x => x != null && x == pot) == null) continue;
-                MelonDebug.Msg("It's a eligible soil pourer, activating it");
+                Logger.D("It's a eligible soil pourer, activating it");
 
                 if (!addSoilToGrowContainer.AreTaskConditionsMetForContainer(pot))
                 {
-                    MelonDebug.Msg("Conditions not met");
+                    Logger.D("Conditions not met");
                     addSoilToGrowContainer.Disable_Networked(null);
                     return;
                 }
@@ -89,7 +91,7 @@ internal class GrowContainerBehaviourPatch
 #else
                     if (!Utils.Is2<IItemSlotOwner>(addSoilToGrowContainer._botanist.Inventory, out var inventory))
                     {
-                        MelonDebug.Error("Botanist inventory does not implement IItemSlotOwner");
+                        Logger.D("Botanist inventory does not implement IItemSlotOwner");
                         addSoilToGrowContainer.Disable_Networked(null);
                         return;
                     }
@@ -102,7 +104,7 @@ internal class GrowContainerBehaviourPatch
                 if (usedItem == null) return;
                 if (!Utils.Is<SoilDefinition>(usedItem.Definition, out var soilDefinition) || soilDefinition == null)
                 {
-                    MelonDebug.Msg("No soil in inventory");
+                    Logger.D("No soil in inventory");
                     addSoilToGrowContainer.Disable_Networked(null);
                     return;
                 }

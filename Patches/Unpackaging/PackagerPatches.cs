@@ -24,6 +24,8 @@ namespace EmployeeTweaks.Patches.Unpackaging;
 [HarmonyPatch(typeof(Packager))]
 internal static class PackagerPatches
 {
+    internal static readonly Logger Logger = new(nameof(PackagerPatches));
+
     [HarmonyWrapSafe]
     [HarmonyPatch(nameof(Packager.GetStationMoveItems))]
     [HarmonyPrefix]
@@ -90,13 +92,13 @@ internal static class PackagerPatches
 
             if (!valid)
             {
-                Console.Log($"[Unpacked] Rejected item {x.ItemInstance.ID}: {reason}");
+                Log($"[Unpacked] Rejected item {x.ItemInstance.ID}: {reason}");
             }
 
             return valid;
         });
         if (slotWithItem == null) return true;
-        Console.Log("[Unpacked] Starting moving items from " + station.gameObject.name);
+        Log("[Unpacked] Starting moving items from " + station.gameObject.name);
         __instance.MoveItemBehaviour.InitializeMoveItemBehaviourWithID(config.DestinationRoute,
             slotWithItem.ItemInstance);
         __instance.MoveItemBehaviour.Enable_Networked();
@@ -114,7 +116,7 @@ internal static class PackagerPatches
         if (_itemToRetrieveTemplate?.ID == null) return;
         if (!moveItemBehaviour.IsTransitRouteValid(route, _itemToRetrieveTemplate.ID, out invalidReason))
         {
-            Console.LogError("Invalid transit route for move item behaviour! Reason: " + invalidReason,
+            LogError("Invalid transit route for move item behaviour! Reason: " + invalidReason,
                 moveItemBehaviour.gameObject);
         }
         else
@@ -123,7 +125,7 @@ internal static class PackagerPatches
             moveItemBehaviour.itemToRetrieveTemplate = _itemToRetrieveTemplate;
             moveItemBehaviour.maxMoveAmount = _maxMoveAmount;
             if (moveItemBehaviour.Npc.Behaviour.DEBUG_MODE)
-                Console.Log(
+                Log(
                     $"MoveItemBehaviour initialized with route: {route.Source.Name} -> {route.Destination.Name} for item: {_itemToRetrieveTemplate.ID}");
             moveItemBehaviour.skipPickup = _skipPickup;
         }
@@ -223,5 +225,23 @@ internal static class PackagerPatches
         }
 
         return false;
+    }
+
+    private static void Log(string message, UnityEngine.Object? context = null)
+    {
+        Console.Log(message, context);
+        Logger.Debug($"{message}, context: {context}");
+    }
+
+    private static void LogError(string message, UnityEngine.Object? context = null)
+    {
+        Console.LogError(message, context);
+        Logger.Debug($"{message}, context: {context}");
+    }
+    
+    private static void LogWarning(string message, UnityEngine.Object? context = null)
+    {
+        Console.LogWarning(message, context);
+        Logger.Debug($"{message}, context: {context}");
     }
 }

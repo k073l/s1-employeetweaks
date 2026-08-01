@@ -1,9 +1,12 @@
 using System.Runtime.CompilerServices;
+using EmployeeTweaks.Helpers;
 
 namespace EmployeeTweaks.Network;
 
 internal static class NetworkLoader
 {
+    private static readonly Logger Logger = new Logger("NetworkLoader");
+
     internal static INetworkManager? Create()
     {
         if (AppDomain.CurrentDomain.GetAssemblies()
@@ -24,7 +27,7 @@ internal static class NetworkLoader
         }
         catch (Exception e)
         {
-            MelonLoader.MelonLogger.Warning(
+            Logger.Warning(
                 $"Failed to initialize network manager: {e}. If you're playing singleplayer, you may disregard this message.");
             return null;
         }

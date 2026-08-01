@@ -1,6 +1,7 @@
-﻿using HarmonyLib;
+﻿using EmployeeTweaks.Helpers;
+using HarmonyLib;
 using MelonLoader;
-using S1API.Internal.Abstraction;
+using S1API.Utils;
 using UnityEngine.UI;
 using Object = UnityEngine.Object;
 #if MONO
@@ -18,7 +19,7 @@ namespace EmployeeTweaks.Patches.FilterItemApply;
 [HarmonyPatch(typeof(FilterConfigPanel))]
 internal class FilterConfigPanelPatches
 {
-    private static MelonLogger.Instance _logger = new("EmployeeTweaks.FilterItemApply");
+    private static Logger _logger = new("FilterItemApply");
 
     internal const string Filter1 = "Apply Item As Filter";
     internal const string Filter2 = "Apply All As Filters";

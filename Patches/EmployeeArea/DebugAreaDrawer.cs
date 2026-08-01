@@ -1,13 +1,14 @@
 ﻿using MelonLoader;
 using S1API.Entities;
 using UnityEngine;
+using Logger = EmployeeTweaks.Helpers.Logger;
 using Object = UnityEngine.Object;
 
 namespace EmployeeTweaks.Patches.EmployeeArea;
 
 internal class DebugAreaDrawer
 {
-    private MelonLogger.Instance Logger = new("EmployeeTweaks.DebugAreaDrawer");
+    private Logger Logger = new("DebugAreaDrawer");
     private List<GameObject> _areas = [];
 
     internal void Draw()

@@ -2,6 +2,7 @@
 using HarmonyLib;
 using MelonLoader;
 using UnityEngine;
+using Logger = EmployeeTweaks.Helpers.Logger;
 #if MONO
 using ScheduleOne.Effects;
 using ScheduleOne.Employees;
@@ -21,7 +22,7 @@ namespace EmployeeTweaks.Patches.QualityEmployeeWorkSpeed;
 [HarmonyPatch]
 internal static class EffectPatches
 {
-    private static MelonLogger.Instance _logger = new("EmployeeTweaks.QualityEmployeeWorkSpeed");
+    private static Logger _logger = new("QualityEmployeeWorkSpeed");
     
     [HarmonyPatch(typeof(ProductItemInstance), nameof(ProductItemInstance.ApplyEffectsToNPC))]
     [HarmonyPrefix]

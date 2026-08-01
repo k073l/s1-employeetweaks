@@ -15,9 +15,10 @@ using EmployeeTweaks.Helpers;
 using EmployeeTweaks.Persistence;
 using HarmonyLib;
 using MelonLoader;
-using S1API.Internal.Abstraction;
+using S1API.Utils;
 using UnityEngine;
 using UnityEngine.UI;
+using Logger = EmployeeTweaks.Helpers.Logger;
 using Object = UnityEngine.Object;
 
 namespace EmployeeTweaks.Patches.Unpackaging;
@@ -60,6 +61,8 @@ public class PackagingStationConfigurationPatch
 [HarmonyPatch(typeof(PackagingStationConfigPanel))]
 public class PackagingStationConfigPanelPatch
 {
+    internal static readonly Logger Logger = new(nameof(PackagingStationConfigPatches));
+
     [HarmonyPostfix]
     [HarmonyPatch(nameof(PackagingStationConfigPanel.BindInternal))]
     public static void BindInternalPostfix(PackagingStationConfigPanel __instance, 
@@ -108,7 +111,7 @@ public class PackagingStationConfigPanelPatch
             var selectionImage = selection?.GetComponent<Image>();
             if (destUI == null || selectionImage == null || destLabel == null)
             {
-                MelonLogger.Error("Failed to find necessary UI components for unpackage toggle");
+                Logger.Error("Failed to find necessary UI components for unpackage toggle");
                 return;
             }
 
@@ -178,7 +181,7 @@ public class PackagingStationConfigPanelPatch
             EventHelper.AddListener(() =>
             {
                 s = s;
-                MelonLogger.Msg("Toggled unpackaging setting for station " + stationGuid);
+                Logger.Msg("Toggled unpackaging setting for station " + stationGuid);
                 var save = UnpackageSave.Instance;
                 if (save?.UnpackageStations == null) return;
                 if (!save.UnpackageStations.TryAdd(stationGuid, true))
@@ -216,7 +219,7 @@ public class PackagingStationConfigPanelPatch
         }
         catch (System.Exception ex)
         {
-            MelonLoader.MelonLogger.Error($"BindInternalPostfix failed: {ex}");
+            Logger.Error($"BindInternalPostfix failed: {ex}");
         }
     }
 }

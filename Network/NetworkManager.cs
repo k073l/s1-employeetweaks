@@ -5,6 +5,7 @@ using MelonLoader;
 using SteamNetworkLib;
 using SteamNetworkLib.Events;
 using UnityEngine;
+using Logger = EmployeeTweaks.Helpers.Logger;
 #if MONO
 using Steamworks;
 #else
@@ -16,7 +17,7 @@ namespace EmployeeTweaks.Network;
 internal class NetworkManager: INetworkManager
 {
     private SteamNetworkClient? _client;
-    private MelonLogger.Instance _logger;
+    private Logger _logger;
 
     public bool IsInLobby => _client?.IsInLobby ?? false;
     public bool IsHost => _client?.IsHost ?? false;
@@ -25,7 +26,7 @@ internal class NetworkManager: INetworkManager
 
     public NetworkManager()
     {
-        _logger = new MelonLogger.Instance("EmployeeTweaks.NetworkManager");
+        _logger = new Logger("NetworkManager");
     }
 
     public bool Initialize()
@@ -57,6 +58,13 @@ internal class NetworkManager: INetworkManager
             _client = null;
             return false;
         }
+    }
+
+    public void RegisterLoggerSettings()
+    {
+        _logger.RaiseDebug = Melon<EmployeeTweaks>.Instance.SettingsRegistry.EnableNetworkDebug?.Value ?? false;
+        Melon<EmployeeTweaks>.Instance.SettingsRegistry.EnableNetworkDebug?
+            .OnEntryValueChanged.Subscribe((_, newValue) => _logger.RaiseDebug = newValue);
     }
 
     private void RegisterMessageHandlers()

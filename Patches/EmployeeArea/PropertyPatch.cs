@@ -1,10 +1,10 @@
 ﻿using System.Reflection;
 using EmployeeTweaks.Helpers;
 using HarmonyLib;
-using Il2CppAeLa.EasyFeedback.APIs;
 using MelonLoader;
 using MelonLoader.Preferences;
 using UnityEngine;
+using Logger = EmployeeTweaks.Helpers.Logger;
 #if MONO
 using ScheduleOne.Property;
 #else
@@ -16,7 +16,7 @@ namespace EmployeeTweaks.Patches.EmployeeArea;
 [HarmonyPatch]
 internal class PropertyPatch
 {
-    private static MelonLogger.Instance Logger = new("EmployeeTweaks.PropertyPatch");
+    private static Logger Logger = new("PropertyPatch");
     internal static Dictionary<Property, (Vector3, Vector3)> _propertyIdlePointRects = new();
 
     // network init early, bc Awake wasn't working on some properties of Il2Cpp bc why would it

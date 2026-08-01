@@ -1,11 +1,11 @@
 {
     "name": "EmployeeTweaks",
-    "version_number": "1.0.5",
+    "version_number": "1.0.6",
     "website_url": "https://github.com/k073l/s1-employeetweaks",
     "description": "Various employee tweaks - unpackaging, sprinkler/pourer use and more",
     "dependencies": [
         "LavaGang-MelonLoader-0.7.2",
-        "ifBars-S1API_Forked-3.0.2",
+        "ifBars-S1API_Forked-3.1.0",
         "hdlmrell-OTCLoader-1.0.5"
     ]
 }

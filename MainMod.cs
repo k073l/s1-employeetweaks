@@ -5,12 +5,14 @@ using EmployeeTweaks.Patches.FilterItemApply;
 using EmployeeTweaks.Patches.Unpackaging;
 using MelonLoader;
 using UnityEngine;
+using Logger = EmployeeTweaks.Helpers.Logger;
 
 [assembly: MelonInfo(
     typeof(EmployeeTweaks.EmployeeTweaks),
     EmployeeTweaks.BuildInfo.Name,
     EmployeeTweaks.BuildInfo.Version,
-    EmployeeTweaks.BuildInfo.Author
+    EmployeeTweaks.BuildInfo.Author,
+    "https://github.com/k073l/s1-employeetweaks"
 )]
 [assembly: MelonColor(1, 217, 131, 36)]
 [assembly: MelonGame("TVGS", "Schedule I")]
@@ -30,12 +32,12 @@ public static class BuildInfo
     public const string Name = "EmployeeTweaks";
     public const string Description = "Various employee tweaks - unpackaging, sprinkler/pourer use and more";
     public const string Author = "k073l";
-    public const string Version = "1.0.5";
+    public const string Version = "1.0.6";
 }
 
 public class EmployeeTweaks : MelonMod
 {
-    private static MelonLogger.Instance Logger;
+    private static Logger Logger;
     private DebugAreaDrawer debugAreaDrawer;
     private bool _lastShift;
     private bool _lastCtrl;
@@ -58,6 +60,7 @@ public class EmployeeTweaks : MelonMod
         if (NetworkManager == null)
             Logger.Warning("NetworkManager is null, multiplayer features will be unavailable.");
         SettingsRegistry.InitializeCategories();
+        NetworkManager?.RegisterLoggerSettings();
         debugAreaDrawer = new DebugAreaDrawer();
         DebugAreaDrawer.WireDebugAreaDrawer(debugAreaDrawer);
         Logger.Msg("EmployeeTweaks initialized");
@@ -106,7 +109,7 @@ public class EmployeeTweaks : MelonMod
             Name = "S1API (Forked)",
             AssemblyName = "S1API",
             IsRequired = true,
-            Version = "3.0.2",
+            Version = "3.1.0",
             Urls =
             [
                 new DependencyUrl

@@ -51,7 +51,7 @@ A collection of employee-related tweaks.
 3. Place the dll file into the Mods directory for your branch
     - For none/beta use IL2CPP
     - For alternate/alternate beta use Mono
-4. Install S1API (Forked) (>=v3.0.2)
+4. Install S1API (Forked) (>=v3.1.0) - required
 5. Install SteamNetworkLib (>=v1.2.1) - optional, only required for multiplayer support
 6. Launch the game
 

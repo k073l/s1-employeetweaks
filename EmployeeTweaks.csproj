@@ -15,7 +15,7 @@
 
         <RootNamespace>EmployeeTweaks</RootNamespace>
 
-        <Version>1.0.5</Version>
+        <Version>1.0.6</Version>
         <Author>k073l</Author>
         <Description>Various employee tweaks - unpackaging, sprinkler/pourer use and more</Description>
 
@@ -47,12 +47,12 @@
     </ItemGroup>
 
     <ItemGroup>
-        <PackageReference Include="S1API.Forked" Version="3.0.2"/>
+        <PackageReference Include="S1API.Forked" Version="3.1.0"/>
         <PackageReference Include="HarmonyX" Version="2.10.2"/>
         <PackageReference Include="LavaGang.MelonLoader" Version="0.7.2"/>
     </ItemGroup>
     <ItemGroup Label="IL2CPP-Refs" Condition="'$(IsMono)' != 'true'">
-        <PackageReference Include="RefGen.Schedule-I.Il2Cpp" Version="0.4.5-f1"/>
+        <PackageReference Include="RefGen.Schedule-I.Il2Cpp" Version="0.4.6-f11"/>
         <PackageReference Include="Il2CppInterop.Common" Version="1.5.1"/>
         <PackageReference Include="Il2CppInterop.Runtime" Version="1.5.1"/>
         <Reference Include="SteamNetworkLib">
@@ -60,7 +60,7 @@
         </Reference>
     </ItemGroup>
     <ItemGroup Label="Mono-Refs" Condition="'$(IsMono)' == 'true'">
-        <PackageReference Include="RefGen.Schedule-I.Mono" Version="0.4.5-f1"/>
+        <PackageReference Include="RefGen.Schedule-I.Mono" Version="0.4.6-f11"/>
         <Reference Include="SteamNetworkLib">
             <HintPath>build/lib/SteamNetworkLib-Mono.dll</HintPath>
         </Reference>

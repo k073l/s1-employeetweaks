@@ -119,8 +119,8 @@ public static class Il2CppListExtensions
 /// </summary>
 public static class Utils
 {
-    private static readonly MelonLogger.Instance Logger = new MelonLogger.Instance(
-        $"{BuildInfo.Name}-Utils"
+    private static readonly Logger Logger = new(
+        $"{BuildInfo.Name}.Utils"
     );
 
     /// <summary>

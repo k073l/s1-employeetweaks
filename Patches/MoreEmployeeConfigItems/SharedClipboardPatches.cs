@@ -2,6 +2,7 @@
 using HarmonyLib;
 using MelonLoader;
 using UnityEngine;
+using Logger = EmployeeTweaks.Helpers.Logger;
 #if MONO
 using ScheduleOne.Management;
 using ScheduleOne.UI.Management;
@@ -16,6 +17,8 @@ namespace EmployeeTweaks.Patches.MoreEmployeeConfigItems;
 [HarmonyPatch]
 public class SharedClipboardPatches
 {
+    internal static readonly Logger Logger = new(nameof(SharedClipboardPatches));
+    
     [HarmonyPatch(typeof(ObjectListFieldUI), nameof(ObjectListFieldUI.Bind))]
     [HarmonyPrefix]
     private static void AddMissing(ObjectListFieldUI __instance, 
@@ -30,7 +33,7 @@ public class SharedClipboardPatches
         var currentEntryCount = __instance.Entries.Length;
         if (maxFieldsNeeded <= currentEntryCount)
         {
-            MelonDebug.Msg($"Not adding, current: {currentEntryCount}, maxFieldsNeeded: {maxFieldsNeeded}");
+            Logger.D($"Not adding, current: {currentEntryCount}, maxFieldsNeeded: {maxFieldsNeeded}");
             return;
         }
 
@@ -38,7 +41,7 @@ public class SharedClipboardPatches
         var template = __instance.Entries.AsEnumerable().FirstOrDefault();
         if (template == null || todo <= 0)
         {
-            MelonDebug.Msg($"Not adding, template: {template} or todo {todo}");
+            Logger.D($"Not adding, template: {template} or todo {todo}");
             return;
         }
 
@@ -54,7 +57,7 @@ public class SharedClipboardPatches
         }
 
         __instance.Entries = newEntries.ToArray();
-        MelonDebug.Msg($"Ensured {__instance.Entries.Length} instances");
+        Logger.D($"Ensured {__instance.Entries.Length} instances");
     }
 
     [HarmonyPatch(typeof(RouteListFieldUI), nameof(RouteListFieldUI.Bind))]
@@ -66,7 +69,7 @@ public class SharedClipboardPatches
         var currentEntryCount = __instance.RouteEntries.Length;
         if (maxFieldsNeeded <= currentEntryCount)
         {
-            MelonDebug.Msg($"Not adding, current: {currentEntryCount}, maxFieldsNeeded: {maxFieldsNeeded}");
+            Logger.D($"Not adding, current: {currentEntryCount}, maxFieldsNeeded: {maxFieldsNeeded}");
             return;
         }
 
@@ -74,7 +77,7 @@ public class SharedClipboardPatches
         var template = __instance.RouteEntries.AsEnumerable().FirstOrDefault()?.gameObject;
         if (template == null || todo <= 0)
         {
-            MelonDebug.Msg($"Not adding, template: {template} or todo {todo}");
+            Logger.D($"Not adding, template: {template} or todo {todo}");
             return;
         }
 

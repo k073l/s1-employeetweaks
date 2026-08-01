@@ -10,7 +10,7 @@ namespace EmployeeTweaks.Helpers;
 
 public class DependenciesChecker
 {
-    private static readonly MelonLogger.Instance Logger = new("EmployeeTweaks.DependenciesChecker");
+    private static readonly Logger Logger = new("DependenciesChecker");
 
     private readonly List<DependencyInfo> _dependencies = [];
     private List<MissingDependencyInfo> _missingDependencies = [];

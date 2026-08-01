@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.0.6
+- Improved employee capacity settings by catching late additions to properties for compatibility with other mods
+- Improved resilience of unpackaging move item patches to avoid rare errors when moving items to/from unpackaging stations
+- Upgraded S1API version to 3.1.0
+- Ensured compatibility with game version 0.4.6-f11
+- Added a new logging system to help with debugging and troubleshooting with new config options
 ## 1.0.5
 - Fixed a bug where multiplayer clients would not see more employee config items
 - Added experimental multiplayer support, including host-authoritative settings and syncing of unpackaging stations

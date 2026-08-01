@@ -26,13 +26,15 @@ using EmployeeTweaks.Persistence;
 using HarmonyLib;
 using MelonLoader;
 using UnityEngine;
+using Logger = EmployeeTweaks.Helpers.Logger;
 
 namespace EmployeeTweaks.Patches.Unpackaging;
 
 [HarmonyPatch(typeof(MoveItemBehaviour))]
 internal static class MoveItemBehaviourPatches
 {
-    private static readonly MelonLogger.Instance Logger = new("EmployeeTweaks.MoveItemBehaviourPatches");
+    internal static readonly Logger Logger = new("MoveItemBehaviourPatches");
+
     private static Dictionary<MoveItemBehaviour, object> customGrabRunning = new();
     private static Dictionary<MoveItemBehaviour, object> customPlaceRunning = new();
 
@@ -50,7 +52,7 @@ internal static class MoveItemBehaviourPatches
 
         if (method == null)
         {
-            MelonLogger.Error("Failed to find IsDestinationValid method!");
+            Logger.Error("Failed to find IsDestinationValid method!");
             return;
         }
 
@@ -69,7 +71,7 @@ internal static class MoveItemBehaviourPatches
             ]);
         if (transitRouteValidIDMeth == null)
         {
-            MelonLogger.Error("Failed to find IsTransitRouteValid method!");
+            Logger.Error("Failed to find IsTransitRouteValid method!");
             return;
         }
 
@@ -315,7 +317,7 @@ internal static class MoveItemBehaviourPatches
                 if (!__instance.IsTransitRouteValid(__instance.assignedRoute, __instance.itemToRetrieveTemplate.ID,
                         out var invalidReason))
                 {
-                   LogWarning($"{__instance.Npc.fullName} transit route no longer valid! Reason: {invalidReason}");
+                   LogWarning($"{__instance.Npc.FullName} transit route no longer valid! Reason: {invalidReason}");
                     __instance.grabRoutine = null;
                     __instance.Disable_Networked(null);
                 }
