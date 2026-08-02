@@ -117,8 +117,16 @@ public class Logger
             // Find MelonBase derived type from the current assembly
             var melonBaseType = typeof(MelonBase);
             var currentAssembly = Assembly.GetExecutingAssembly();
-            var melonDerivedType = currentAssembly.GetTypes()
-                .FirstOrDefault(t => melonBaseType.IsAssignableFrom(t) && !t.IsAbstract);
+            Type[] types;
+            try
+            {
+                types = currentAssembly.GetTypes();
+            }
+            catch (ReflectionTypeLoadException ex)
+            {
+                types = ex.Types.OfType<Type>().ToArray();
+            }
+            var melonDerivedType = types.FirstOrDefault(t => melonBaseType.IsAssignableFrom(t) && !t.IsAbstract);
 
             var melonType = typeof(Melon<>).MakeGenericType(melonDerivedType ??
                                                             throw new InvalidOperationException(

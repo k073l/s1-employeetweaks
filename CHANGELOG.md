@@ -1,5 +1,7 @@
 # Changelog
 
+## 1.0.7
+- Fixed a critical bug where missing SteamNetworkLib dependency prevented the game from loading normally
 ## 1.0.6
 - Improved employee capacity settings by catching late additions to properties for compatibility with other mods
 - Improved resilience of unpackaging move item patches to avoid rare errors when moving items to/from unpackaging stations
