@@ -1,5 +1,6 @@
 ﻿using System.Reflection;
 using EmployeeTweaks.Helpers;
+using EmployeeTweaks.Patches.BotanistSprinklersPourer;
 using EmployeeTweaks.Patches.MoreEmployeeConfigItems;
 using EmployeeTweaks.Patches.Unpackaging;
 using MelonLoader;
@@ -38,6 +39,8 @@ internal class SettingsRegistry
     internal MelonPreferences_Entry<bool> EnableConfigItemsDebug;
     
     internal MelonPreferences_Entry<bool> EnableUnpackagingDebug;
+
+    internal MelonPreferences_Entry<bool> EnablePourerDebug;
     
     internal object? _boxedClient = null;
     internal object? _boxedOptions = null;
@@ -147,6 +150,9 @@ internal class SettingsRegistry
         EnableUnpackagingDebug =
             EmployeeTweaksDebugCategory.CreateEntry("EmployeeTweaksEnableUnpackagingDebug", false, "Enable Unpackaging Debug",
                 "Enables debug logging for unpackaging");
+        EnablePourerDebug =
+            EmployeeTweaksDebugCategory.CreateEntry("EmployeeTweaksEnablePourerDebug", false, "Enable Pourer/Sprinkler Debug",
+                "Enables debug logging for automatic use of Soil Pourers and Sprinklers");
     }
 
     private void PushLoggerSettings()
@@ -159,9 +165,11 @@ internal class SettingsRegistry
         SetAndRegister(PackagingStationConfigPanelPatch.Logger, EnableUnpackagingDebug);
         SetAndRegister(MoveItemBehaviourPatches.Logger, EnableUnpackagingDebug);
         SetAndRegister(PackagerPatches.Logger, EnableUnpackagingDebug);
+
+        SetAndRegister(GrowContainerBehaviourPatch.Logger, EnablePourerDebug);
     }
 
-    private void SetAndRegister(Logger logger, MelonPreferences_Entry<bool>? entry)
+    private static void SetAndRegister(Logger logger, MelonPreferences_Entry<bool>? entry)
     {
         logger.RaiseDebug = entry?.Value ?? false;
         entry?.OnEntryValueChanged.Subscribe((_, newValue) => logger.RaiseDebug = newValue);

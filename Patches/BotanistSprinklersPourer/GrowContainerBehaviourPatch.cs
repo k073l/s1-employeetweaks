@@ -27,7 +27,7 @@ namespace EmployeeTweaks.Patches.BotanistSprinklersPourer;
 [HarmonyPatch(typeof(GrowContainerBehaviour))]
 internal class GrowContainerBehaviourPatch
 {
-    private static readonly Logger Logger = new("GrowContainerBehaviour");
+    internal static readonly Logger Logger = new("GrowContainerBehaviour");
     [HarmonyPatch(nameof(GrowContainerBehaviour.OnActiveTick))]
     [HarmonyPostfix]
     private static void UseSprinklerOrPourer(GrowContainerBehaviour __instance)
@@ -37,16 +37,16 @@ internal class GrowContainerBehaviourPatch
         if (!__instance.IsAtGrowContainer()) return;
         if (Utils.Is<WaterPotBehaviour>(__instance, out var waterPotBehaviour) && waterPotBehaviour != null)
         {
-            if (!Utils.Is<Pot>(waterPotBehaviour._growContainer, out var pot)) return;
+            if (!Utils.Is<Pot>(waterPotBehaviour._growContainer, out var pot) || pot == null) return;
 
             var itemsAroundPot = GetItemsAroundItem(pot);
-            Logger.D("Found " + itemsAroundPot.Count + " items around the pot");
+            Logger.T("Found " + itemsAroundPot.Count + " items around the pot");
             foreach (var item in itemsAroundPot)
             {
                 if (!Utils.Is<Sprinkler>(item, out var sprinkler) || sprinkler == null) continue;
                 var sprinklerEligiblePots = sprinkler.GetPots();
                 if (sprinklerEligiblePots.AsEnumerable().FirstOrDefault(x => x != null && x == pot) == null) continue;
-                Logger.D("It's an eligible sprinkler, activating it");
+                Logger.T("It's an eligible sprinkler, activating it");
                 if (!sprinkler.IsSprinkling)
                     sprinkler.Interacted();
                 waterPotBehaviour.OnStopPerformAction();
@@ -67,17 +67,17 @@ internal class GrowContainerBehaviourPatch
             if (!Utils.Is<Pot>(addSoilToGrowContainer._growContainer, out var pot)) return;
 
             var itemsAroundPot = GetItemsAroundItem(pot);
-            Logger.D("Found " + itemsAroundPot.Count + " items around the pot");
+            Logger.T("Found " + itemsAroundPot.Count + " items around the pot");
             foreach (var item in itemsAroundPot)
             {
                 if (!Utils.Is<SoilPourer>(item, out var soilPourer) || soilPourer == null) continue;
                 var soilPourerEligiblePots = soilPourer.GetPots();
                 if (soilPourerEligiblePots.AsEnumerable().FirstOrDefault(x => x != null && x == pot) == null) continue;
-                Logger.D("It's a eligible soil pourer, activating it");
+                Logger.T("It's a eligible soil pourer, activating it");
 
                 if (!addSoilToGrowContainer.AreTaskConditionsMetForContainer(pot))
                 {
-                    Logger.D("Conditions not met");
+                    Logger.T("Conditions not met");
                     addSoilToGrowContainer.Disable_Networked(null);
                     return;
                 }
@@ -170,24 +170,23 @@ internal class GrowContainerBehaviourPatch
         yield return new WaitForSeconds(waitTime);
         if (!soilPourer.isDispensing)
             soilPourer.PourSoil();
-        ItemInstance usedItem = null;
         try
         {
-            usedItem = slot?.ItemInstance.GetCopy(1);
+            var usedItem = slot?.ItemInstance?.GetCopy(1);
+            addSoilToGrowContainerBehaviour.OnStopPerformAction();
+            addSoilToGrowContainerBehaviour.OnActionSuccess(usedItem);
+            if (slot is { Quantity: > 0 })
+                slot.ChangeQuantity(-1);
+            addSoilToGrowContainerBehaviour.Disable_Networked(null);
+            if (Utils.Is<Botanist>(addSoilToGrowContainerBehaviour.Npc, out var botanist))
+            {
+                botanist?.SetIdle(true);
+            }
         }
         catch (Exception e)
         {
             // benign, likely many coroutines ran
-            yield break;
-        }
-        addSoilToGrowContainerBehaviour.OnStopPerformAction();
-        addSoilToGrowContainerBehaviour.OnActionSuccess(usedItem);
-        if (slot is { Quantity: > 0 })
-            slot.ChangeQuantity(-1);
-        addSoilToGrowContainerBehaviour.Disable_Networked(null);
-        if (Utils.Is<Botanist>(addSoilToGrowContainerBehaviour.Npc, out var botanist))
-        {
-            botanist?.SetIdle(true);
+            Logger.D($"Possibly benign Exception in PourerRoutine: {e.Message}");
         }
     }
 }
