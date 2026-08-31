@@ -15,7 +15,7 @@
 
         <RootNamespace>EmployeeTweaks</RootNamespace>
 
-        <Version>1.0.7</Version>
+        <Version>1.0.8</Version>
         <Author>k073l</Author>
         <Description>Various employee tweaks - unpackaging, sprinkler/pourer use and more</Description>
 

@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.0.8
+- Added validation for unpackaging-related slot routing when products are of different quality
+- Improved idle point generation - idle employees should not intersect with each other now
 ## 1.0.7
 - Fixed a critical bug where missing SteamNetworkLib dependency prevented the game from loading normally
 ## 1.0.6

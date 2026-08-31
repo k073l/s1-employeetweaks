@@ -106,7 +106,7 @@ internal class DebugAreaDrawer
         if (mat.HasProperty("_Surface"))
             mat.SetFloat("_Surface", 1f);
 
-        var blue = _random.NextSingle();
+        var blue = (float)_random.NextDouble();
         var color = new Color(0f, 1f, blue, 1f);
         if (mat.HasProperty("_BaseColor"))
             mat.SetColor("_BaseColor", color);
