@@ -93,9 +93,13 @@ internal static class PackagerPatches
             if (!valid)
             {
                 Log($"[Unpacked] Rejected item {x.ItemInstance.ID}: {reason}");
+                return false;
             }
 
-            return valid;
+            var dest = config.DestinationRoute.Destination;
+            if (dest.GetInputCapacityForItem(x.ItemInstance) > 0) return true;
+            Log($"[Unpacked] Rejected item {x.ItemInstance.ID} (quality mismatch at destination)");
+            return false;
         });
         if (slotWithItem == null) return true;
         Log("[Unpacked] Starting moving items from " + station.gameObject.name);
@@ -238,7 +242,7 @@ internal static class PackagerPatches
         Console.LogError(message, context);
         Logger.Debug($"{message}, context: {context}");
     }
-    
+
     private static void LogWarning(string message, UnityEngine.Object? context = null)
     {
         Console.LogWarning(message, context);

@@ -124,7 +124,9 @@ internal static class MoveItemBehaviourPatches
             return false;
         }
 
-        var capacity = destIsStation ? dest.GetOutputCapacityForItem(item, __instance.Npc) : dest.GetInputCapacityForItem(item, __instance.Npc);
+        var capacity = destIsStation
+            ? dest.GetOutputCapacityForItem(item, __instance.Npc)
+            : dest.GetInputCapacityForItem(item, __instance.Npc);
         if (capacity == 0)
         {
             invalidReason = "Destination has no capacity for item!";
@@ -170,23 +172,26 @@ internal static class MoveItemBehaviourPatches
             return false;
         }
 
-        var itemInstance = src.GetFirstSlotContainingItem(itemID,
-                srcIsStation ? ITransitEntity.ESlotType.Input : ITransitEntity.ESlotType.Output)
-            ?.ItemInstance;
-        if (itemInstance == null || itemInstance.Quantity <= 0)
+        var slots = (srcIsStation ? src.InputSlots : src.OutputSlots)
+            .AsEnumerable()
+            .Where(s => s?.ItemInstance?.ID == itemID && s.ItemInstance.Quantity > 0)
+            .ToList();
+        if (slots.Count == 0)
         {
             invalidReason = "Item is null or quantity is 0!";
             __result = false;
             return false;
         }
 
-        if (!__instance.IsDestinationValid(route, itemInstance, out invalidReason))
+        foreach (var slot in slots)
         {
-            __result = false;
+            if (!__instance.IsDestinationValid(route, slot.ItemInstance, out invalidReason)) continue;
+            invalidReason = string.Empty;
+            __result = true;
             return false;
         }
 
-        __result = true;
+        __result = false;
         return false;
     }
 
@@ -307,6 +312,7 @@ internal static class MoveItemBehaviourPatches
                     Logger.Debug("Could not find employee!");
                     yield break;
                 }
+
                 var seconds = TimeManager.TickDuration / employee.CurrentWorkSpeed;
                 yield return new WaitForSeconds(seconds);
                 if (__instance.itemToRetrieveTemplate?.ID == null)
@@ -314,10 +320,11 @@ internal static class MoveItemBehaviourPatches
                     Logger.Debug("Could not find item to retrieve template!");
                     yield break;
                 }
+
                 if (!__instance.IsTransitRouteValid(__instance.assignedRoute, __instance.itemToRetrieveTemplate.ID,
                         out var invalidReason))
                 {
-                   LogWarning($"{__instance.Npc.FullName} transit route no longer valid! Reason: {invalidReason}");
+                    LogWarning($"{__instance.Npc.FullName} transit route no longer valid! Reason: {invalidReason}");
                     __instance.grabRoutine = null;
                     __instance.Disable_Networked(null);
                 }
@@ -329,6 +336,7 @@ internal static class MoveItemBehaviourPatches
                     __instance.currentState = MoveItemBehaviour.EState.Idle;
                 }
             }
+
             customGrabRunning.Remove(__instance);
         }
     }
@@ -367,6 +375,7 @@ internal static class MoveItemBehaviourPatches
             Logger.Debug("Could not find first slot containing item!");
             return false;
         }
+
         var copy = firstSlotContainingTemplateItem.ItemInstance.GetCopy(amountToGrab);
         __instance.grabbedAmount = amountToGrab;
         firstSlotContainingTemplateItem.ChangeQuantity(-amountToGrab);
@@ -598,7 +607,7 @@ internal static class MoveItemBehaviourPatches
             if (!__instance.IsDestinationValid(__instance.assignedRoute, firstIdenticalItem, out var invalidReason))
             {
                 LogWarning("Invalid transit route for move item behaviour by checking destination! Reason: " +
-                                   invalidReason);
+                           invalidReason);
                 __instance.Disable_Networked(null);
                 return false;
             }
@@ -607,13 +616,13 @@ internal static class MoveItemBehaviourPatches
         __instance.currentState = MoveItemBehaviour.EState.Idle;
         return false;
     }
-    
+
     private static void LogWarning(string msg)
     {
         Console.LogWarning(msg);
         Logger.Debug(msg);
     }
-    
+
     private static void LogError(string msg)
     {
         Console.LogError(msg);
