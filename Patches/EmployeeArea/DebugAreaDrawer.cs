@@ -3,6 +3,7 @@ using S1API.Entities;
 using UnityEngine;
 using Logger = EmployeeTweaks.Helpers.Logger;
 using Object = UnityEngine.Object;
+using Random = System.Random;
 
 namespace EmployeeTweaks.Patches.EmployeeArea;
 
@@ -10,6 +11,7 @@ internal class DebugAreaDrawer
 {
     private Logger Logger = new("DebugAreaDrawer");
     private List<GameObject> _areas = [];
+    private static Random _random = new();
 
     internal void Draw()
     {
@@ -24,6 +26,18 @@ internal class DebugAreaDrawer
             Logger.Msg($"Drawing Employee Area at {area.Item1 + nudge}, {area.Item2 + nudge}");
             var go = DrawDebugArea(area.Item1 + nudge, area.Item2 + nudge, new Color(1f, 0f, 0f, 0.2f));
             _areas.Add(go);
+        }
+
+        foreach (var (prop, _) in PropertyPatch._propertyIdlePointRects)
+        {
+            var idlePoints = prop.EmployeeIdlePoints;
+            if (idlePoints == null) continue;
+            foreach (var t in idlePoints)
+            {
+                if (t == null) continue;
+                var cyl = DrawIdlePointMarker(t.position + nudge);
+                _areas.Add(cyl);
+            }
         }
     }
     
@@ -74,6 +88,38 @@ internal class DebugAreaDrawer
         renderer.material = mat;
 
         return square;
+    }
+
+    private static GameObject DrawIdlePointMarker(Vector3 pos)
+    {
+        var cyl = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+        cyl.name = "DebugIdlePoint";
+        Object.Destroy(cyl.GetComponent<Collider>());
+        cyl.transform.position = pos;
+        cyl.transform.localScale = new Vector3(0.2f, 0.15f, 0.2f);
+
+        var renderer = cyl.GetComponent<MeshRenderer>();
+        var shader = Shader.Find("Universal Render Pipeline/Lit");
+        if (shader == null) return cyl;
+
+        var mat = new Material(shader);
+        if (mat.HasProperty("_Surface"))
+            mat.SetFloat("_Surface", 1f);
+
+        var blue = _random.NextSingle();
+        var color = new Color(0f, 1f, blue, 1f);
+        if (mat.HasProperty("_BaseColor"))
+            mat.SetColor("_BaseColor", color);
+        if (mat.HasProperty("_EmissionColor"))
+        {
+            mat.EnableKeyword("_EMISSION");
+            mat.SetColor("_EmissionColor", new Color(color.r, color.g, color.b) * 1.5f);
+        }
+        mat.SetInt("_ZWrite", 0);
+        mat.renderQueue = 3001;
+        renderer.material = mat;
+
+        return cyl;
     }
 
     internal static void WireDebugAreaDrawer(DebugAreaDrawer debugAreaDrawer)

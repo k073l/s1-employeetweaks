@@ -31,6 +31,8 @@ internal class PropertyPatch
         {
             var (min, max) = MinMaxPoints(idlePoints.AsEnumerable().ToList());
             if (min == max) max = min + new Vector3(0.5f, 0f, 0.5f);
+            min -= new Vector3(1f, 0f, 1f);
+            max += new Vector3(1f, 0f, 1f);
             _propertyIdlePointRects[__instance] = (min, max);
         }
 
@@ -41,7 +43,7 @@ internal class PropertyPatch
             Melon<EmployeeTweaks>.Instance.SettingsRegistry._boxedOptions, true,
             $"{__instance.propertyName} Employee Capacity",
             "Max amount of employees you can hire for this property",
-            validator: new ValueRange<int>(1, Mathf.CeilToInt(__instance.EmployeeCapacity * 1.5f) + 1));
+            validator: new ValueRange<int>(1, Mathf.CeilToInt(__instance.EmployeeCapacity * 1.5f) + 2));
         Melon<EmployeeTweaks>.Instance.SettingsRegistry.EmployeeCapacities.Add(entry);
         entry.OnEntryValueChanged.Subscribe((oldVal, newVal) =>
         {
@@ -90,8 +92,8 @@ internal class PropertyPatch
 
             var newPoints = PoissonDiskSampler2D.SampleAdaptive(
                 rect.Item1, rect.Item2, (prop.EmployeeIdlePoints?.AsEnumerable() ?? []).ToList(), diff, 1f, 0.1f,
-                prop.propertyCode.GetHashCode());
-            if (newPoints.Count + (prop.EmployeeIdlePoints?.Length ?? 0) < target)
+                PoissonDiskSampler2D.DeterministicHash(prop.propertyCode), minDistance: 0.6f);
+            if (newPoints.Count < diff)
             {
                 Logger.Warning(
                     $"Generated {newPoints.Count} new points for {prop.propertyName} but needed {diff}, cannot add capacity");
@@ -180,7 +182,21 @@ internal class PropertyPatch
 
 public static class PoissonDiskSampler2D
 {
+    private const uint FnvOffsetBias = 2166136261;
+    private const uint FnvPrime = 16777619;
+
     private static System.Random _rng;
+
+    public static int DeterministicHash(string s)
+    {
+        var hash = FnvOffsetBias;
+        foreach (var c in s)
+        {
+            hash ^= (byte)c;
+            hash *= FnvPrime;
+        }
+        return unchecked((int)hash);
+    }
 
     public static List<Vector3> SampleAdaptive(
         Vector3 min,
@@ -190,17 +206,77 @@ public static class PoissonDiskSampler2D
         float preferredRadius,
         float minRadius,
         int seed,
+        float minDistance = 0.5f,
         int maxIterations = 5,
         int k = 30)
     {
         _rng = new System.Random(seed);
 
+        var centroid = ComputeCentroid(blocked);
+        var minDistSqr = minDistance * minDistance;
+
+        // min distance + line-of-sight
+        var result = SampleWithConstraints(min, max, blocked, targetCount, preferredRadius, minRadius,
+            centroid, minDistSqr, requireLos: true, maxIterations: maxIterations, k: k);
+        if (result.Count >= targetCount)
+            return result.GetRange(0, targetCount);
+
+        // min-distance, halve it and retry
+        var relaxedDist = minDistance * 0.5f;
+        var relaxedDistSqr = relaxedDist * relaxedDist;
+        result = SampleWithConstraints(min, max, blocked, targetCount, preferredRadius, minRadius,
+            centroid, relaxedDistSqr, requireLos: true, maxIterations: maxIterations, k: k);
+        if (result.Count >= targetCount)
+            return result.GetRange(0, targetCount);
+
+        // try LOS first per candidate, accept no-LOS as fallback
+        result = SampleWithConstraints(min, max, blocked, targetCount, preferredRadius, minRadius,
+            centroid, minDistSqr, requireLos: false, maxIterations: maxIterations, k: k);
+        if (result.Count >= targetCount)
+            return result.GetRange(0, targetCount);
+
+        // min distance only, no LOS
+        var radius = preferredRadius;
+        List<Vector3> best = [];
+        for (var i = 0; i < maxIterations; i++)
+        {
+            var sample = Sample(min, max, blocked, radius, minDistSqr, centroid, requireLos: false, k);
+            if (sample.Count >= targetCount)
+            {
+                best = sample;
+                break;
+            }
+            if (sample.Count > best.Count)
+                best = sample;
+            radius *= 0.7f;
+            if (radius < minRadius) break;
+        }
+
+        if (best.Count < targetCount)
+            best.AddRange(Fill(min, max, blocked, best, targetCount - best.Count, minDistSqr));
+
+        return best.GetRange(0, Mathf.Min(targetCount, best.Count));
+    }
+
+    private static List<Vector3> SampleWithConstraints(
+        Vector3 min,
+        Vector3 max,
+        List<Transform> blocked,
+        int targetCount,
+        float preferredRadius,
+        float minRadius,
+        Vector3 centroid,
+        float minDistSqr,
+        bool requireLos,
+        int maxIterations,
+        int k)
+    {
         var radius = preferredRadius;
         List<Vector3> best = [];
 
         for (var i = 0; i < maxIterations; i++)
         {
-            var result = Sample(min, max, blocked, radius, k);
+            var result = Sample(min, max, blocked, radius, minDistSqr, centroid, requireLos, k);
 
             if (result.Count >= targetCount)
                 return result.GetRange(0, targetCount);
@@ -209,13 +285,8 @@ public static class PoissonDiskSampler2D
                 best = result;
 
             radius *= 0.7f;
-
-            if (radius < minRadius)
-                break;
+            if (radius < minRadius) break;
         }
-
-        if (best.Count < targetCount)
-            best.AddRange(Fill(min, max, blocked, best, targetCount - best.Count, minRadius));
 
         return best;
     }
@@ -225,6 +296,9 @@ public static class PoissonDiskSampler2D
         Vector3 max,
         List<Transform> blocked,
         float radius,
+        float minDistSqr,
+        Vector3 centroid,
+        bool requireLos,
         int k)
     {
         var cellSize = radius / Mathf.Sqrt(2f);
@@ -237,28 +311,122 @@ public static class PoissonDiskSampler2D
         var result = new List<Vector3>();
 
         var first = RandomPoint(min, max);
-        active.Add(first);
-        result.Add(first);
-        Set(grid, min, cellSize, first);
+        if (IsAcceptable(first, blocked, null, null, minDistSqr, centroid, requireLos))
+        {
+            active.Add(first);
+            result.Add(first);
+            Set(grid, min, cellSize, first);
+        }
+        else if (requireLos)
+        {
+            for (var i = 0; i < k; i++)
+            {
+                var candidate = GenerateAround(centroid, radius);
+                candidate.x = Mathf.Clamp(candidate.x, min.x, max.x);
+                candidate.z = Mathf.Clamp(candidate.z, min.z, max.z);
+                if (TooClose(candidate, blocked, null, null, minDistSqr))
+                    continue;
+                if (!HasLineOfSight(candidate, centroid, blocked))
+                    continue;
+                active.Add(candidate);
+                result.Add(candidate);
+                Set(grid, min, cellSize, candidate);
+                break;
+            }
+        }
 
-        while (active.Count > 0)
+        var maxIterations = width * height * 2;
+        var iterations = 0;
+        while (active.Count > 0 && iterations++ < maxIterations)
         {
             var index = _rng.Next(active.Count);
             var p = active[index];
 
             var found = false;
 
-            for (var i = 0; i < k; i++)
+            if (requireLos)
             {
-                var candidate = GenerateAround(p, radius);
-
-                if (IsValid(candidate, min, max, radius, grid, blocked, cellSize))
+                for (var i = 0; i < k; i++)
                 {
+                    var candidate = GenerateAround(p, radius);
+
+                    if (TooClose(candidate, blocked, null, null, minDistSqr) ||
+                        TooCloseAny(candidate, result, minDistSqr))
+                        continue;
+
+                    if (!HasLineOfSight(candidate, centroid, blocked))
+                        continue;
+
+                    if (!InGrid(candidate, min, max, radius, grid, cellSize))
+                        continue;
+
                     active.Add(candidate);
                     result.Add(candidate);
                     Set(grid, min, cellSize, candidate);
                     found = true;
                     break;
+                }
+
+                if (!found)
+                {
+                    for (var i = 0; i < k; i++)
+                    {
+                        var candidate = GenerateAround(centroid, radius);
+                        candidate.x = Mathf.Clamp(candidate.x, min.x, max.x);
+                        candidate.z = Mathf.Clamp(candidate.z, min.z, max.z);
+
+                        if (TooClose(candidate, blocked, null, null, minDistSqr) ||
+                            TooCloseAny(candidate, result, minDistSqr))
+                            continue;
+
+                        if (!HasLineOfSight(candidate, centroid, blocked))
+                            continue;
+
+                        if (!InGrid(candidate, min, max, radius, grid, cellSize))
+                            continue;
+
+                        active.Add(candidate);
+                        result.Add(candidate);
+                        Set(grid, min, cellSize, candidate);
+                        found = true;
+                        break;
+                    }
+                }
+            }
+            else
+            {
+                Vector3? bestCandidate = null;
+                var bestHadLos = false;
+
+                for (var i = 0; i < k; i++)
+                {
+                    var candidate = GenerateAround(p, radius);
+
+                    if (TooClose(candidate, blocked, null, null, minDistSqr) ||
+                        TooCloseAny(candidate, result, minDistSqr))
+                        continue;
+
+                    if (!InGrid(candidate, min, max, radius, grid, cellSize))
+                        continue;
+
+                    var hasLos = HasLineOfSight(candidate, centroid, blocked);
+
+                    if (!bestCandidate.HasValue || (hasLos && !bestHadLos))
+                    {
+                        bestCandidate = candidate;
+                        bestHadLos = hasLos;
+                    }
+
+                    if (hasLos)
+                        break;
+                }
+
+                if (bestCandidate.HasValue)
+                {
+                    active.Add(bestCandidate.Value);
+                    result.Add(bestCandidate.Value);
+                    Set(grid, min, cellSize, bestCandidate.Value);
+                    found = true;
                 }
             }
 
@@ -275,10 +443,9 @@ public static class PoissonDiskSampler2D
         List<Transform> blocked,
         List<Vector3> current,
         int needed,
-        float epsilon)
+        float minDistSqr)
     {
         var result = new List<Vector3>();
-        var epsSqr = epsilon * epsilon;
 
         var attempts = 0;
         var maxAttempts = needed * 20;
@@ -287,7 +454,7 @@ public static class PoissonDiskSampler2D
         {
             var p = RandomPoint(min, max);
 
-            if (TooClose(p, blocked, current, result, epsSqr))
+            if (TooClose(p, blocked, current, result, minDistSqr))
                 continue;
 
             result.Add(p);
@@ -315,23 +482,36 @@ public static class PoissonDiskSampler2D
         );
     }
 
-    private static bool IsValid(
+    private static bool IsAcceptable(
+        Vector3 p,
+        List<Transform> blocked,
+        List<Vector3>? a,
+        List<Vector3>? b,
+        float minDistSqr,
+        Vector3 centroid,
+        bool requireLos)
+    {
+        if (TooClose(p, blocked, a, b, minDistSqr))
+            return false;
+
+        if (requireLos && !HasLineOfSight(p, centroid, blocked))
+            return false;
+
+        return true;
+    }
+
+    private static bool InGrid(
         Vector3 p,
         Vector3 min,
         Vector3 max,
         float radius,
         Vector3?[,] grid,
-        List<Transform> blocked,
         float cellSize)
     {
         if (p.x < min.x || p.x > max.x || p.z < min.z || p.z > max.z)
             return false;
 
         var r2 = radius * radius;
-
-        if (TooClose(p, blocked, null, null, r2))
-            return false;
-
         var gx = (int)((p.x - min.x) / cellSize);
         var gz = (int)((p.z - min.z) / cellSize);
 
@@ -345,7 +525,7 @@ public static class PoissonDiskSampler2D
                 continue;
 
             if (grid[nx, nz].HasValue &&
-                (grid[nx, nz].Value - p).sqrMagnitude < r2)
+                (grid[nx, nz]!.Value - p).sqrMagnitude < r2)
                 return false;
         }
 
@@ -362,8 +542,8 @@ public static class PoissonDiskSampler2D
     private static bool TooClose(
         Vector3 p,
         List<Transform> blocked,
-        List<Vector3> a,
-        List<Vector3> b,
+        List<Vector3>? a,
+        List<Vector3>? b,
         float epsSqr)
     {
         foreach (var t in blocked)
@@ -383,6 +563,59 @@ public static class PoissonDiskSampler2D
         return false;
     }
 
+    private static bool TooCloseAny(Vector3 p, List<Vector3> points, float minDistSqr)
+    {
+        foreach (var v in points)
+            if ((v - p).sqrMagnitude < minDistSqr)
+                return true;
+        return false;
+    }
+
     private static float Lerp(float a, float b) =>
         a + (float)_rng.NextDouble() * (b - a);
+
+    private static Vector3 ComputeCentroid(List<Transform> points)
+    {
+        if (points.Count == 0) return Vector3.zero;
+        var sum = Vector3.zero;
+        foreach (var t in points)
+            sum += t.position;
+        return sum / points.Count;
+    }
+
+    private static Vector3 FindNearestPoint(Vector3 p, List<Transform> points)
+    {
+        var best = points[0].position;
+        var bestDist = (best - p).sqrMagnitude;
+        for (var i = 1; i < points.Count; i++)
+        {
+            var pos = points[i].position;
+            var dist = (pos - p).sqrMagnitude;
+            if (dist < bestDist)
+            {
+                best = pos;
+                bestDist = dist;
+            }
+        }
+        return best;
+    }
+
+    private static bool HasLineOfSight(Vector3 from, Vector3 to)
+    {
+        var elevated = new Vector3(0f, 1f, 0f);
+        return !Physics.Linecast(from + elevated, to + elevated);
+    }
+
+    private static bool HasLineOfSight(Vector3 candidate, Vector3 centroid, List<Transform> blocked)
+    {
+        if (HasLineOfSight(centroid, candidate))
+            return true;
+        if (blocked.Count > 1)
+        {
+            var nearest = FindNearestPoint(candidate, blocked);
+            if (nearest != centroid && HasLineOfSight(nearest, candidate))
+                return true;
+        }
+        return false;
+    }
 }
