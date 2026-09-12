@@ -153,6 +153,7 @@ internal class SettingsRegistry
         EnablePourerDebug =
             EmployeeTweaksDebugCategory.CreateEntry("EmployeeTweaksEnablePourerDebug", false, "Enable Pourer/Sprinkler Debug",
                 "Enables debug logging for automatic use of Soil Pourers and Sprinklers");
+        PushLoggerSettings();
     }
 
     private void PushLoggerSettings()

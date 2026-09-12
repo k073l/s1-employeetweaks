@@ -1,5 +1,7 @@
 # Changelog
 
+## 1.0.9
+- Fixed Handlers getting stuck in a loop when moving items between regular packaging stations and storages when products are of different qualities. 
 ## 1.0.8
 - Added validation for unpackaging-related slot routing when products are of different quality
 - Improved idle point generation - idle employees should not intersect with each other now

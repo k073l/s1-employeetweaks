@@ -84,10 +84,9 @@ internal static class MoveItemBehaviourPatches
     private static bool IsDestinationValid(MoveItemBehaviour __instance, TransitRoute route,
         ItemInstance item, ref string invalidReason, ref bool __result)
     {
-        invalidReason = string.Empty;
         if (route?.Destination == null)
         {
-            __result = false;
+            Logger.D("Destination or route is null");
             return true;
         }
 
@@ -97,7 +96,7 @@ internal static class MoveItemBehaviourPatches
         var srcIsStation = Utils.Is2<PackagingStation>(src, out var srcStation) && srcStation != null;
         if (!destIsStation && !srcIsStation)
         {
-            __result = false;
+            Logger.D("Destination nor source is a Packaging Station");
             return true;
         }
 
@@ -106,9 +105,10 @@ internal static class MoveItemBehaviourPatches
         UnpackageSave.Instance.TryGetValue(station.GUID, out var shouldUnpackage);
         if (!shouldUnpackage)
         {
-            __result = false;
+            Logger.D("We shouldn't unpackage, bailing");
             return true;
         }
+        invalidReason = string.Empty;
 
         if (!__instance.CanGetToDestination(route))
         {
@@ -142,10 +142,9 @@ internal static class MoveItemBehaviourPatches
     private static bool IsTransitRouteValidID(MoveItemBehaviour __instance, TransitRoute route, string itemID,
         ref string invalidReason, ref bool __result)
     {
-        invalidReason = string.Empty;
         if (route?.Destination == null || route.Source == null)
         {
-            __result = false;
+            Logger.D("Route, destination or source is null");
             return true;
         }
 
@@ -154,16 +153,27 @@ internal static class MoveItemBehaviourPatches
         var src = route.Source;
         var srcIsStation = Utils.Is2<PackagingStation>(src, out var srcStation) && srcStation != null;
 
-        if (!destIsStation && !srcIsStation) return true;
+        if (!destIsStation && !srcIsStation)
+        {
+            Logger.D("Destination nor source is a Packaging Station");
+            return true;
+        }
         var station = destIsStation ? destStation : srcStation;
 
         UnpackageSave.Instance.TryGetValue(station.GUID, out var shouldUnpackage);
         if (!shouldUnpackage)
         {
-            __result = false;
+            // When dest is station use template since that checks quality. This doesn't work when station is src.
+            if (destIsStation)
+            {
+                Logger.D("We shouldn't unpackage, bailing and calling template-aware IsTransitRouteValid, since dest is a station");
+                __result = __instance.IsTransitRouteValid(route, __instance.itemToRetrieveTemplate, out invalidReason);
+                return false;
+            }
+            Logger.D("We shouldn't unpackage, bailing and calling original method");
             return true;
         }
-
+        invalidReason = string.Empty;
 
         if (!route.AreEntitiesNonNull())
         {
