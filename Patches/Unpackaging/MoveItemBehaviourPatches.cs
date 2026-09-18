@@ -568,6 +568,11 @@ internal static class MoveItemBehaviourPatches
     [HarmonyPrefix]
     private static bool StartTransit(MoveItemBehaviour __instance)
     {
+        if (!InstanceFinder.IsServer)
+        {
+            return false;
+        }
+
         var dest = __instance.assignedRoute.Destination;
         var destIsStation = Utils.Is2<PackagingStation>(dest, out var destStation) && destStation != null;
         var src = __instance.assignedRoute.Source;
@@ -577,10 +582,6 @@ internal static class MoveItemBehaviourPatches
 
         Console.Log(
             $"{__instance.assignedRoute.Source.Name} ->  {__instance.assignedRoute.Destination.Name} ({__instance.itemToRetrieveTemplate?.ID}x{__instance.itemToRetrieveTemplate?.Quantity})");
-        if (!InstanceFinder.IsServer)
-        {
-            return false;
-        }
 
         if (__instance.Npc.Inventory.GetIdenticalItemAmount(__instance.itemToRetrieveTemplate) == 0)
         {

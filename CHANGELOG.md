@@ -1,5 +1,7 @@
 # Changelog
 
+## 1.0.10
+- Fixed NREs on joining multiplayer clients (thanks UltromanTheTacoman!)
 ## 1.0.9
 - Fixed Handlers getting stuck in a loop when moving items between regular packaging stations and storages when products are of different qualities. 
 ## 1.0.8
