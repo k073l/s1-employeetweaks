@@ -1,7 +1,8 @@
 # Changelog
 
 ## 1.0.10
-- Fixed NREs on joining multiplayer clients (thanks UltromanTheTacoman!)
+- Fixed NREs on joining multiplayer clients (thanks UltromanTheTacoman for a thorough report!)
+- Fixed a regression in 1.0.9 where Chemists couldn't move product into regular packaging stations
 ## 1.0.9
 - Fixed Handlers getting stuck in a loop when moving items between regular packaging stations and storages when products are of different qualities. 
 ## 1.0.8

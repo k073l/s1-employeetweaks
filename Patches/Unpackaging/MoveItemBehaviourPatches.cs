@@ -164,7 +164,7 @@ internal static class MoveItemBehaviourPatches
         if (!shouldUnpackage)
         {
             // When dest is station use template since that checks quality. This doesn't work when station is src.
-            if (destIsStation)
+            if (destIsStation && __instance.itemToRetrieveTemplate != null)
             {
                 Logger.D("We shouldn't unpackage, bailing and calling template-aware IsTransitRouteValid, since dest is a station");
                 __result = __instance.IsTransitRouteValid(route, __instance.itemToRetrieveTemplate, out invalidReason);
