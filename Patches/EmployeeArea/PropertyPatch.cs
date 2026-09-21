@@ -138,7 +138,7 @@ internal class PropertyPatch
     public static void ManualPatchProperties(HarmonyLib.Harmony harmony)
     {
         // Bungalow also seems to patch RV and MotelRoom? Alright
-        List<Type> types = [typeof(Bungalow), typeof(Manor), typeof(SewerOffice), typeof(Business), typeof(Property)];
+        List<Type> types = [typeof(Bungalow), typeof(Manor), typeof(Business), typeof(Property)];
         foreach (var type in types)
         {
             var method = type.GetMethod(
