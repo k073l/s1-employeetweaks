@@ -33,10 +33,17 @@ internal class GrowContainerBehaviourPatch
     private static void UseSprinklerOrPourer(GrowContainerBehaviour __instance)
     {
         if (!InstanceFinder.IsServer) return;
+        // Bail if features disabled
+        if (Melon<EmployeeTweaks>.Instance.SettingsRegistry.SprinklerPourerToggle?.Value == SpToggle.None) return;
         if (__instance._currentState != GrowContainerBehaviour.EState.PerformingAction) return;
         if (!__instance.IsAtGrowContainer()) return;
         if (Utils.Is<WaterPotBehaviour>(__instance, out var waterPotBehaviour) && waterPotBehaviour != null)
         {
+            // Bail if we only automate Soil Pourer
+            if (Melon<EmployeeTweaks>.Instance.SettingsRegistry.SprinklerPourerToggle?.Value ==
+                SpToggle.SoilPourerOnly) return;
+            Logger.D($"Continuing with sprinkler automation, value is " +
+                     $"{Melon<EmployeeTweaks>.Instance.SettingsRegistry.SprinklerPourerToggle?.Value}");
             if (!Utils.Is<Pot>(waterPotBehaviour._growContainer, out var pot) || pot == null) return;
 
             var itemsAroundPot = GetItemsAroundItem(pot);
@@ -64,6 +71,11 @@ internal class GrowContainerBehaviourPatch
         if (Utils.Is<AddSoilToGrowContainerBehaviour>(__instance, out var addSoilToGrowContainer) &&
             addSoilToGrowContainer != null)
         {
+            // Bail if we only automate Sprinklers
+            if (Melon<EmployeeTweaks>.Instance.SettingsRegistry.SprinklerPourerToggle?.Value ==
+                SpToggle.SprinklerOnly) return;
+            Logger.D($"Continuing with pourer automation, value is " +
+                     $"{Melon<EmployeeTweaks>.Instance.SettingsRegistry.SprinklerPourerToggle?.Value}");
             if (!Utils.Is<Pot>(addSoilToGrowContainer._growContainer, out var pot)) return;
 
             var itemsAroundPot = GetItemsAroundItem(pot);

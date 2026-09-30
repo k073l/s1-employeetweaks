@@ -31,17 +31,21 @@ internal class SettingsRegistry
     internal NetworkedMelonEntry<int> ChemistMaxStations;
 
     internal NetworkedMelonEntry<int> CleanerMaxBins;
-    
+
+    private MelonPreferences_Category _employeeTweaksFeatureToggles;
+
+    internal NetworkedMelonEntry<SpToggle> SprinklerPourerToggle;
+
     internal MelonPreferences_Category EmployeeTweaksDebugCategory;
-    
+
     internal MelonPreferences_Entry<bool> EnableNetworkDebug;
-    
+
     internal MelonPreferences_Entry<bool> EnableConfigItemsDebug;
-    
+
     internal MelonPreferences_Entry<bool> EnableUnpackagingDebug;
 
     internal MelonPreferences_Entry<bool> EnablePourerDebug;
-    
+
     internal object? _boxedClient = null;
     internal object? _boxedOptions = null;
 
@@ -83,6 +87,7 @@ internal class SettingsRegistry
     {
         InitializeCapacityCategory();
         InitializeAssignsCategory();
+        InitializeFeatureToggleCategory();
         InitializeModDebugCategory();
     }
 
@@ -91,7 +96,8 @@ internal class SettingsRegistry
         EmployeeCapacityCategory =
             MelonPreferences.CreateCategory("EmployeeTweaksEmployeeCapacity", "Employee Capacities");
         EnableCapacityAndDebug =
-            EmployeeCapacityCategory.GetOrCreateNetworkedEntry("EmployeeTweaksEnableCapacityAndDebug", true, _boxedClient, _boxedOptions, true, "Enable Category",
+            EmployeeCapacityCategory.GetOrCreateNetworkedEntry("EmployeeTweaksEnableCapacityAndDebug", true,
+                _boxedClient, _boxedOptions, true, "Enable Category",
                 "Enables employee capacity tweaks and drawing employee idle points area");
         DrawDebugArea =
             EmployeeCapacityCategory.CreateEntry("EmployeeTweaksDrawDebugArea", false, "Draw Debug Area",
@@ -103,7 +109,8 @@ internal class SettingsRegistry
         EmployeeAssignsCategory =
             MelonPreferences.CreateCategory("EmployeeTweaksEmployeeAssignsCategory", "Employee Assigns Capacities");
         EnableAssigns =
-            EmployeeAssignsCategory.GetOrCreateNetworkedEntry("EmployeeTweaksEnableAssigns", true, _boxedClient, _boxedOptions, true, "Enable Category",
+            EmployeeAssignsCategory.GetOrCreateNetworkedEntry("EmployeeTweaksEnableAssigns", true, _boxedClient,
+                _boxedOptions, true, "Enable Category",
                 "Enables employee assigns capacity modifications");
         BotanistMaxPots =
             EmployeeAssignsCategory.GetOrCreateNetworkedEntry("EmployeeTweaksBotanistMaxPots",
@@ -130,11 +137,23 @@ internal class SettingsRegistry
                 validator: new ValueRange<int>(SettingsConstants.ChemistBoundsMaxStations.Item1,
                     SettingsConstants.ChemistBoundsMaxStations.Item2));
         CleanerMaxBins =
-            EmployeeAssignsCategory.GetOrCreateNetworkedEntry("EmployeeTweaksCleanerMaxBins", SettingsConstants.CleanerDefaultMaxBins, _boxedClient, _boxedOptions, true,
+            EmployeeAssignsCategory.GetOrCreateNetworkedEntry("EmployeeTweaksCleanerMaxBins",
+                SettingsConstants.CleanerDefaultMaxBins, _boxedClient, _boxedOptions, true,
                 "Cleaner Max Trash Cans",
                 $"Maximum number of trash cans a cleaner can be assigned to (allowed values from {SettingsConstants.CleanerBoundsMaxBins.Item1} to {SettingsConstants.CleanerBoundsMaxBins.Item2}). Changes require a restart.",
                 validator: new ValueRange<int>(SettingsConstants.CleanerBoundsMaxBins.Item1,
                     SettingsConstants.CleanerBoundsMaxBins.Item2));
+    }
+
+    private void InitializeFeatureToggleCategory()
+    {
+        _employeeTweaksFeatureToggles =
+            MelonPreferences.CreateCategory("EmployeeTweaksFeatureToggles", "Employee Tweaks Feature Toggles");
+        SprinklerPourerToggle =
+            _employeeTweaksFeatureToggles.GetOrCreateNetworkedEntry("EmployeeTweaksSprinklerPourerConfig",
+                SpToggle.Both, _boxedClient, _boxedOptions, true,
+                "Sprinkler&Pourer Automation Config",
+                "Customize automation settings for sprinklers and soil pourers. Changes may require a restart.");
     }
 
     private void InitializeModDebugCategory()
@@ -145,13 +164,16 @@ internal class SettingsRegistry
             EmployeeTweaksDebugCategory.CreateEntry("EmployeeTweaksEnableNetworkDebug", false, "Enable Network Debug",
                 "Enables debug logging for networked preferences");
         EnableConfigItemsDebug =
-            EmployeeTweaksDebugCategory.CreateEntry("EmployeeTweaksEnableConfigItemsDebug", false, "Enable Config Items Debug",
+            EmployeeTweaksDebugCategory.CreateEntry("EmployeeTweaksEnableConfigItemsDebug", false,
+                "Enable Config Items Debug",
                 "Enables debug logging for employee config items");
         EnableUnpackagingDebug =
-            EmployeeTweaksDebugCategory.CreateEntry("EmployeeTweaksEnableUnpackagingDebug", false, "Enable Unpackaging Debug",
+            EmployeeTweaksDebugCategory.CreateEntry("EmployeeTweaksEnableUnpackagingDebug", false,
+                "Enable Unpackaging Debug",
                 "Enables debug logging for unpackaging");
         EnablePourerDebug =
-            EmployeeTweaksDebugCategory.CreateEntry("EmployeeTweaksEnablePourerDebug", false, "Enable Pourer/Sprinkler Debug",
+            EmployeeTweaksDebugCategory.CreateEntry("EmployeeTweaksEnablePourerDebug", false,
+                "Enable Pourer/Sprinkler Debug",
                 "Enables debug logging for automatic use of Soil Pourers and Sprinklers");
         PushLoggerSettings();
     }
@@ -189,4 +211,12 @@ internal static class SettingsConstants
     public static (int, int) ChemistBoundsMaxStations = (1, 32);
     public const int CleanerDefaultMaxBins = 6;
     public static (int, int) CleanerBoundsMaxBins = (1, 32);
+}
+
+public enum SpToggle
+{
+    Both,
+    SoilPourerOnly,
+    SprinklerOnly,
+    None,
 }
