@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.1.0
+- Ensured compatibility with 0.4.7f12
+- Added a feature toggle for sprinkler & pourer automation
 ## 1.0.10
 - Fixed NREs on joining multiplayer clients (thanks UltromanTheTacoman for a thorough report!)
 - Fixed a regression in 1.0.9 where Chemists couldn't move product into regular packaging stations
