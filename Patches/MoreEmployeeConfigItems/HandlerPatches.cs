@@ -2,6 +2,7 @@
 using MelonLoader;
 using UnityEngine;
 using UnityEngine.UI;
+using Logger = EmployeeTweaks.Helpers.Logger;
 #if MONO
 using ScheduleOne.Employees;
 using ScheduleOne.UI.Management;
@@ -16,6 +17,8 @@ namespace EmployeeTweaks.Patches.MoreEmployeeConfigItems;
 [HarmonyPatch]
 internal static class HandlerPatches
 {
+    private static readonly Logger Logger = new(nameof(HandlerPatches));
+    
     [HarmonyPatch(typeof(Packager), nameof(Packager.AssignProperty))]
     [HarmonyPostfix]
     private static void AddRoutes(Packager __instance)
@@ -65,5 +68,15 @@ internal static class HandlerPatches
         scrollRT.sizeDelta = new Vector2(0f, 165f);
         Canvas.ForceUpdateCanvases();
         LayoutRebuilder.ForceRebuildLayoutImmediate(scroll.content);
+#if !MONO
+        if (routeList == null)
+        {
+            Logger.Err("Route list is null");
+            return;
+        }
+
+        SharedClipboardPatches.AddMissing(routeList);
+        routeList.Refresh(routeList.Fields[0].Routes);
+#endif
     }
 }

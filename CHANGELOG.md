@@ -1,5 +1,7 @@
 # Changelog
 
+## 1.1.1
+- Fixed "Add Route" button for Handlers not actually adding a route (#4, thanks for reporting!)
 ## 1.1.0
 - Ensured compatibility with 0.4.7f12
 - Added a feature toggle for sprinkler & pourer automation

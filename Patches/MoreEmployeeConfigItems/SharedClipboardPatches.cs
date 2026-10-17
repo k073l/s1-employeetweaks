@@ -62,7 +62,7 @@ public class SharedClipboardPatches
 
     [HarmonyPatch(typeof(RouteListFieldUI), nameof(RouteListFieldUI.Bind))]
     [HarmonyPrefix]
-    private static void AddMissing(RouteListFieldUI __instance)
+    internal static void AddMissing(RouteListFieldUI __instance)
     {
         if (!Melon<EmployeeTweaks>.Instance.SettingsRegistry.EnableAssigns.Value) return;
         var maxFieldsNeeded = SettingsConstants.HandlerBoundsMaxRoutes.Item2;
